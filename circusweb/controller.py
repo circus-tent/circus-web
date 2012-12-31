@@ -1,14 +1,23 @@
 from collections import defaultdict
 import threading
+from gevent import local
+
+if not threading.local is local.local:
+    from gevent import monkey
+    monkey.patch_all()
+
+import zmq.eventloop as old_io
+import zmq.green
+old_io.ioloop.Poller = zmq.green.Poller
+
+import circus
+import circus.client
+
+circus.zmq = circus.client.zmq = zmq.green
+
 from circus.commands import get_commands
 from circus.client import CircusClient, CallError
 
-try:
-    from gevent import monkey, local
-    if not threading.local is local.local:
-        monkey.patch_all()
-except ImportError:
-    pass
 
 cmds = get_commands()
 
