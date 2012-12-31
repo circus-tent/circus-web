@@ -2,7 +2,7 @@ from socketio.mixins import RoomsMixin, BroadcastMixin
 from socketio.namespace import BaseNamespace
 
 from circus.stats.client import StatsClient
-from circus.web.session import get_client
+from circusweb.session import get_client
 
 
 class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):

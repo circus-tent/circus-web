@@ -3,9 +3,9 @@ import os
 from mako.lookup import TemplateLookup
 from bottle import request, route as route_, redirect
 
-from circus import logger, __version__
-from circus.web.controller import CallError
-from circus.web.session import get_session, connect_to_circus, get_client
+from circusweb import logger, __version__
+from circusweb.controller import CallError
+from circusweb.session import get_session, connect_to_circus, get_client
 
 
 def set_message(message):

@@ -13,13 +13,13 @@ except ImportError, e:
                       'You can do so by using "pip install -r '
                       '%s"\nInitial error: %s' % (reqs, str(e)))
 
-from circus.web.namespace import StatsNamespace
-from circus import __version__, logger
+from circusweb.namespace import StatsNamespace
+from circusweb import __version__, logger
 from circus.util import configure_logger, LOG_LEVELS
-from circus.web.util import (run_command, render_template, set_message, route,
+from circusweb.util import (run_command, render_template, set_message, route,
                              CURDIR)
-from circus.web.session import connect_to_circus, disconnect_from_circus
-from circus.web.server import SocketIOServer
+from circusweb.session import connect_to_circus, disconnect_from_circus
+from circusweb.server import SocketIOServer
 
 
 session_opts = {

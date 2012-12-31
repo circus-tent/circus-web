@@ -1,5 +1,5 @@
 from bottle import request
-from circus.web.controller import LiveClient
+from circusweb.controller import LiveClient
 
 _CLIENT = None
 
