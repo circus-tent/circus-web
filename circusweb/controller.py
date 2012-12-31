@@ -12,8 +12,9 @@ old_io.ioloop.Poller = zmq.green.Poller
 
 import circus
 import circus.client
+import circus.consumer
 
-circus.zmq = circus.client.zmq = zmq.green
+circus.consumer.zmq = circus.zmq = circus.client.zmq = zmq.green
 
 from circus.commands import get_commands
 from circus.client import CircusClient, CallError
