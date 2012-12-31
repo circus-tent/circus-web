@@ -40,7 +40,7 @@ setup(name='circus-web',
           "Development Status :: 3 - Alpha"],
       install_requires=install_requires,
       tests_require=['webtest', 'unittest2'],
-      test_suite='circus.tests',
+      test_suite='circusweb.tests',
       entry_points="""
       [console_scripts]
       circushttpd = circus.web.circushttpd:main
