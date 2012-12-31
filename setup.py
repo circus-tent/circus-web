@@ -43,5 +43,5 @@ setup(name='circus-web',
       test_suite='circusweb.tests',
       entry_points="""
       [console_scripts]
-      circushttpd = circus.web.circushttpd:main
+      circushttpd = circusweb.circushttpd:main
       """)
