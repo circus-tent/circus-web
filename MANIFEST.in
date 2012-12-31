@@ -3,4 +3,5 @@ include README.rst
 include LICENSE
 include CHANGES.rst
 include pip-requirements.txt
-recursive-include circus/web *.css *.png *.ico *.html *.js
+recursive-include circusweb/media *.css *.png *.ico *.html *.js
+recursive-include circusweb/templates *.html

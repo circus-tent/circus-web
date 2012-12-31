@@ -45,7 +45,9 @@ def run_command(func, message, redirect_url, redirect_on_error=None,
 
 
 CURDIR = os.path.dirname(__file__)
-TMPLS = TemplateLookup(directories=[CURDIR])
+TMPLDIR = os.path.join(CURDIR, 'templates')
+TMPLS = TemplateLookup(directories=[TMPLDIR])
+MEDIADIR = os.path.join(CURDIR, 'media')
 
 
 def render_template(template, **data):

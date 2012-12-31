@@ -17,7 +17,7 @@ from circusweb.namespace import StatsNamespace
 from circusweb import __version__, logger
 from circus.util import configure_logger, LOG_LEVELS
 from circusweb.util import (run_command, render_template, set_message, route,
-                             CURDIR)
+                            MEDIADIR)
 from circusweb.session import connect_to_circus, disconnect_from_circus
 from circusweb.server import SocketIOServer
 
@@ -35,7 +35,7 @@ app = SessionMiddleware(app(), session_opts)
 
 @route('/media/<filename:path>', ensure_client=False)
 def get_media(filename):
-    return static_file(filename, root=CURDIR)
+    return static_file(filename, root=MEDIADIR)
 
 
 @route('/', method='GET')
