@@ -1,6 +1,8 @@
+import time
 import subprocess
 import os
 import sys
+import re
 
 from webtest import TestApp
 import gevent
@@ -59,12 +61,27 @@ class TestHttpd(TestCircus):
         # let's add two watchers
         self.app.get('/watchers/sleeper/process/incr')
         self.app.get('/watchers/sleeper/process/incr')
+        self.app.get('/watchers/sleeper/process/decr')
+        self.app.get('/watchers/sleeper/process/incr')
 
         # let's go back to the watcher page now
         # and check the number of watchers
         watcher_page = self.app.get('/watchers/sleeper')
         self.assertTrue('<span class="num_process">3</span>' in
                         watcher_page.body)
+
+        # kill all processes
+        pids = set(re.findall('Process #(\d+)<', watcher_page.body))
+        for pid in pids:
+            self.app.get('/watchers/sleeper/process/kill/%s' % pid)
+
+        # wait a sec
+        time.sleep(1.)
+
+        # check all pids have changed
+        watcher_page = self.app.get('/watchers/sleeper')
+        new_pids = set(re.findall('Process #(\d+)<', watcher_page.body))
+        self.assertTrue(new_pids.isdisjoint(pids))
 
     def test_watcher_status(self):
         # starting/stopping the watcher
