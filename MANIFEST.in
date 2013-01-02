@@ -3,5 +3,8 @@ include README.rst
 include LICENSE
 include CHANGES.rst
 include pip-requirements.txt
+include test-requirements.txt
+include tox.ini
+include Makefile
 recursive-include circusweb/media *.css *.png *.ico *.html *.js
 recursive-include circusweb/templates *.html
