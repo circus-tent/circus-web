@@ -13,7 +13,6 @@ from circus.stream import QueueStream
 cfg = os.path.join(os.path.dirname(__file__), 'test_web.ini')
 
 
-
 class TestHttpd(TestCircus):
     def setUp(self):
         TestCircus.setUp(self)
@@ -21,9 +20,9 @@ class TestHttpd(TestCircus):
         self.stream = QueueStream()
         # let's run a circus
         cmd = [sys.executable, "-c",
-                "from circus import circusd; circusd.main()", cfg]
+               "from circus import circusd; circusd.main()", cfg]
         self.p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+                                  stderr=subprocess.PIPE)
 
     def tearDown(self):
         self.p.terminate()
