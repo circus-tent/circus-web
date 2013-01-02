@@ -82,3 +82,9 @@ class TestHttpd(TestCircus):
         watcher_page = self.app.get('/watchers/sleeper')
         self.assertTrue('title="active"' in watcher_page.body)
         self.assertFalse('class="stopped"' in watcher_page.body)
+
+    def test_disconnect(self):
+        self.assertFalse('Connect' in self.app.get('/').body)
+        res = self.app.get('/disconnect')
+        res = res.follow()
+        self.assertTrue('Connect' in res.body)
