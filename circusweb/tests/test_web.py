@@ -65,3 +65,20 @@ class TestHttpd(TestCircus):
         watcher_page = self.app.get('/watchers/sleeper')
         self.assertTrue('<span class="num_process">3</span>' in
                         watcher_page.body)
+
+    def test_watcher_status(self):
+        # starting/stopping the watcher
+        watcher_page = self.app.get('/watchers/sleeper')
+        self.assertTrue('title="active"' in watcher_page.body)
+
+        # stopping
+        self.app.get('/watchers/sleeper/switch_status')
+        watcher_page = self.app.get('/watchers/sleeper')
+        self.assertFalse('title="active"' in watcher_page.body)
+        self.assertTrue('class="stopped"' in watcher_page.body)
+
+        # starting
+        self.app.get('/watchers/sleeper/switch_status')
+        watcher_page = self.app.get('/watchers/sleeper')
+        self.assertTrue('title="active"' in watcher_page.body)
+        self.assertFalse('class="stopped"' in watcher_page.body)
