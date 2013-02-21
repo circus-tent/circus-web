@@ -1,7 +1,7 @@
 Mako==0.7.0
 MarkupSafe==0.15
 bottle==0.10.9
-anyjson==0.3.1
+anyjson
 gevent-socketio
 gevent-websocket==0.3.6
 greenlet
