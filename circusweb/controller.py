@@ -69,6 +69,11 @@ class LiveClient(object):
 
             self.watchers.sort()
             self.stats_endpoint = self.get_global_options()['stats_endpoint']
+            if self.endpoint.startswith('tcp://'):
+                # In case of multi interface binding i.e: tcp://0.0.0.0:5557
+                anyaddr = '0.0.0.0'
+                ip = self.endpoint.lstrip('tcp://').split(':')[0]
+                self.stats_endpoint = self.stats_endpoint.replace(anyaddr, ip)
         except CallError:
             self.connected = False
 
