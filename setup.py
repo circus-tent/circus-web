@@ -6,10 +6,9 @@ if not hasattr(sys, 'version_info') or sys.version_info < (2, 6, 0, 'final'):
     raise SystemExit("Circus requires Python 2.6 or later.")
 
 
-with open('pip-requirements.txt') as reqs:
-    install_requires = [
-        line for line in reqs.read().split('\n') if (line and not
-                                                     line.startswith('--'))]
+install_requires = ['Mako', 'MarkupSafe', 'bottle', 'anyjson',
+                    'gevent-socketio', 'gevent-websocket', 'greenlet',
+                    'beaker', 'pyzmq', 'circus', 'gevent']
 
 try:
     import argparse     # NOQA
