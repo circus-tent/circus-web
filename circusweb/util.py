@@ -1,4 +1,11 @@
 import os
+import json
+import socket
+import select
+
+from time import time
+from threading import Thread, Lock
+from urlparse import urlparse
 
 from mako.lookup import TemplateLookup
 from bottle import request, route as route_, url, redirect
@@ -93,3 +100,58 @@ def route(*args, **kwargs):
             return func(*fargs, **fkwargs)
         return route_(*args, **kwargs)(client_or_redirect)
     return wrapper
+
+
+class AutoDiscoveryThread(Thread):
+
+    def __init__(self, multicast_endpoint, rediscover_timeout=30):
+        super(AutoDiscoveryThread, self).__init__()
+        self.multicast_endpoint = multicast_endpoint
+        self.discovered_endpoints = []
+        self.rediscover_timeout = rediscover_timeout
+        self.lock = Lock()
+
+    def run(self):
+        any_addr = '0.0.0.0'
+
+        multicast_addr, multicast_port = urlparse(self.multicast_endpoint) \
+            .netloc.split(':')
+        multicast_port = int(multicast_port)
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,
+                             socket.IPPROTO_UDP)
+        sock.bind((any_addr, 0))
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 255)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.setblocking(0)
+
+        sock.sendto('""', (multicast_addr, multicast_port))
+
+        timer = time()
+
+        while True:
+            # Wait for socket event
+            ready = select.select([sock], [], [], self.rediscover_timeout)
+
+            if ready[0]:
+                data, address = sock.recvfrom(1024)
+                data = json.loads(data)
+                endpoint = data.get('endpoint', '')
+                if endpoint.startswith('tcp://'):
+                    # In case of multi interface binding i.e:
+                    # tcp://0.0.0.0:5557
+                    endpoint = endpoint.replace('0.0.0.0', address[0])
+
+                with self.lock:
+                    self.discovered_endpoints.append(endpoint)
+
+            if time() - timer > self.rediscover_timeout * 60:
+                # Rediscover every 30 seconds
+                with self.lock:
+                    self.discovered_endpoints = []
+                timer = time()
+                sock.sendto('""', (multicast_addr, multicast_port))
+
+    def get_endpoints(self):
+        with self.lock:
+            return self.discovered_endpoints[:]

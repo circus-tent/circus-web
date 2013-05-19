@@ -5,6 +5,15 @@
 <p id="countdown">Autoconnect in <strong id="countdown-value"></strong>s</p>
 <form id='connector' action="${url('connect')}" method="POST">
 <input id="endpoint" type="text" name="endpoint" value="tcp://127.0.0.1:5555"/>
+% if endpoints:
+    <p>OR</p>
+    <select name="endpoint_select">
+    <option value="">-----</option>
+    % for endpoint in endpoints:
+        <option value="${endpoint}">${endpoint}</option>
+    % endfor
+    </select>
+% endif
 <input type="submit" class="connect" value="Connect"/>
 </form>
 
@@ -32,5 +41,5 @@
         }
     }
   }, 1000);
-  
+
 </script>
