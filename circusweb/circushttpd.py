@@ -4,7 +4,7 @@ import sys
 
 try:
     from beaker.middleware import SessionMiddleware
-    from bottle import app, run, static_file, redirect, request
+    from bottle import app, run, url, static_file, redirect, request
     from socketio import socketio_manage
 except ImportError, e:
     reqs = os.path.join(os.path.abspath(os.path.dirname(__file__)),
@@ -33,46 +33,46 @@ session_opts = {
 app = SessionMiddleware(app(), session_opts)
 
 
-@route('/media/<filename:path>', ensure_client=False)
+@route('/media/<filename:path>', name='media', ensure_client=False)
 def get_media(filename):
     return static_file(filename, root=MEDIADIR)
 
 
-@route('/', method='GET')
+@route('/', method='GET', name='index')
 def index():
     return render_template('index.html')
 
 
-@route('/watchers/<name>/process/kill/<pid>')
+@route('/watchers/<name>/process/kill/<pid>', name='kill_process')
 def kill_process(name, pid):
     return run_command(
         func='killproc', args=(name, pid),
         message='process {pid} killed sucessfully'.format(pid=pid),
-        redirect_url='/watchers/%s' % name)
+        redirect_url=url('watcher', name=name))
 
 
-@route('/watchers/<name>/process/decr', method='GET')
+@route('/watchers/<name>/process/decr', method='GET', name='decr_proc')
 def decr_proc(name):
     return run_command(
         func='decrproc', args=(name,),
         message='removed one process from the {watcher} pool'.format(
             watcher=name),
-        redirect_url='/watchers/%s' % name)
+        redirect_url=url('watcher', name=name))
 
 
-@route('/watchers/<name>/process/incr', method='GET')
+@route('/watchers/<name>/process/incr', method='GET', name='incr_proc')
 def incr_proc(name):
 
     return run_command(
         func='incrproc', args=(name,),
         message='added one process to the {watcher} pool'.format(watcher=name),
-        redirect_url='/watchers/%s' % name)
+        redirect_url=url('watcher', name=name))
 
 
-@route('/watchers/<name>/switch_status', method='GET')
+@route('/watchers/<name>/switch_status', method='GET', name='switch_status')
 def switch(name):
     return run_command(func='switch_status', args=(name,),
-                       message='status switched', redirect_url='/')
+                       message='status switched', redirect_url=url('index'))
 
 
 @route('/add_watcher', method='POST')
@@ -80,22 +80,22 @@ def add_watcher():
     return run_command('add_watcher',
                        kwargs=request.POST,
                        message='added a new watcher',
-                       redirect_url='/watchers/%(name)s' % request.POST,
-                       redirect_on_error='/')
+                       redirect_url=url('watcher', name=request.POST),
+                       redirect_on_error=url('index'))
 
 
-@route('/watchers/<name>', method='GET')
+@route('/watchers/<name>', method='GET', name='watcher')
 def watcher(name):
     return render_template('watcher.html', name=name)
 
 
-@route('/sockets', method='GET')
+@route('/sockets', method='GET', name='sockets')
 def sockets():
     return render_template('sockets.html')
 
 
 # XXX we need to add the ssh server option in the form
-@route('/connect', method=['POST', 'GET'], ensure_client=False)
+@route('/connect', method=['POST', 'GET'], name='connect', ensure_client=False)
 def connect():
     """Connects to the stats client, using the endpoint that's passed in the
     POST body.
@@ -116,14 +116,14 @@ def connect():
         if not client.connected:
             set_message('Impossible to connect')
 
-        redirect('/')
+        redirect(url('index'))
 
 
-@route('/disconnect')
+@route('/disconnect', name='disconnect')
 def disconnect():
     if disconnect_from_circus():
         set_message('You are now disconnected')
-    redirect('/')
+    redirect(url('index'))
 
 
 @route('/socket.io/<someid>/websocket/<socket_id>', method='GET')
