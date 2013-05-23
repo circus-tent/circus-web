@@ -1,8 +1,9 @@
 <%inherit file="base.html"/>
+<% from bottle import url %>
 
 <h1>Connect to a Circus system</h1>
 <p id="countdown">Autoconnect in <strong id="countdown-value"></strong>s</p>
-<form id='connector' action="/connect" method="POST">
+<form id='connector' action="${url('connect')}" method="POST">
 <input id="endpoint" type="text" name="endpoint" value="tcp://127.0.0.1:5555"/>
 <input type="submit" class="connect" value="Connect"/>
 </form>
