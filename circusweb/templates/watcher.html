@@ -1,10 +1,11 @@
 <%inherit file="base.html"/>
+<% from bottle import url %>
 
 % if client:
     <div class="title">
      <div class="watcher_name">Watcher <strong>${name}</strong>
       <a style="display:inline-block;" class="${client.get_status(name)}"
-         title="${client.get_status(name)}" href="/watchers/${name}/switch_status?redirect=/watchers/${name}"></a></div>
+         title="${client.get_status(name)}" href="${url('switch_status', name=name)}?redirect=${url('watcher', name=name)}"></a></div>
       <div class="watcher_description"><strong>${client.get_option(name, 'numprocesses')}</strong> <span>processes</span>
      </div>
     </div>
@@ -27,8 +28,8 @@
             <span style="display: inline-block; float: left;" class="label">Process #${pid}</span><span id="${name}-${pid}_last_age" class="age-stat"></span>
 
             <span style="display: inline-block; float: right;">
-                <a href="/watchers/${name}/process/kill/${pid}" title="Kill">
-                    <img src="/media/kill.png" border="0" alt="Kill" />
+                <a href="${url('kill_process', name=name, pid=pid)}" title="Kill">
+                    <img src="${url('media', filename='kill.png')}" border="0" alt="Kill" />
                 </a>
             </span>
         </div>
@@ -52,7 +53,7 @@
             <span class="label">Add process</span>
         </div>
         <div class="stat">
-             <a class="add_process" title="Add process" href="/watchers/${name}/process/incr?redirect=/watchers/${name}">+</a>
+             <a class="add_process" title="Add process" href="${url('incr_proc', name=name)}?redirect=${url('watcher', name=name)}">+</a>
         </div>
     </div>
     %endif
@@ -130,9 +131,9 @@
             Number of processes
             </td>
             <td class="value">
-                <a href="/watchers/${name}/process/incr?redirect=/watchers/${name}"><span class="orangelabel">+</span></a>
+                <a href="${url('incr_proc', name=name)}?redirect=${url('watcher', name=name)}"><span class="orangelabel">+</span></a>
                 <span class="num_process">${options['numprocesses']}</span>
-                <a href="/watchers/${name}/process/decr?redirect=/watchers/${name}"><span class="orangelabel">-</span></a>
+                <a href="${url('decr_proc', name=name)}?redirect=${url('watcher', name=name)}"><span class="orangelabel">-</span></a>
             </td>
         </tr>
         <tr>
@@ -153,7 +154,7 @@
         </tr>
     </table>
 
-<script src="/media/socket.io.js"></script>
+<script src="${url('media', filename='socket.io.js')}"></script>
 <script type="text/javascript">
     $(document).ready(function () {
         var socket = io.connect('${SERVER}');

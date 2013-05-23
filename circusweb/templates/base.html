@@ -1,4 +1,5 @@
 <!doctype html>
+<% from bottle import url %>
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -12,15 +13,15 @@
     <!--[if IE]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <link rel="stylesheet" href="/media/circus.css" type="text/css" />
-    <link rel="shortcut icon" href="/media/favicon.ico"/>
-    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-    <script type="text/javascript" src="/media/socket.io.js"></script>
-    <script type="text/javascript" src="/media/jquery.min.js"></script>
+    <link rel="stylesheet" href="${url('media', filename='circus.css')}" type="text/css" />
+    <link rel="shortcut icon" href="${url('media', filename='favicon.ico')}"/>
+    <link rel="shortcut icon" type="image/x-icon" href="${url('media', filename='favicon.ico')}" />
+    <script type="text/javascript" src="${url('media', filename='socket.io.js')}"></script>
+    <script type="text/javascript" src="${url('media', filename='jquery.min.js')}"></script>
     
-    <script type="text/javascript" src="/media/rickshaw.min.js"></script>
-    <script type="text/javascript" src="/media/d3.v2.js"></script>
-    <script type="text/javascript" src="/media/circus.js"></script>
+    <script type="text/javascript" src="${url('media', filename='rickshaw.min.js')}"></script>
+    <script type="text/javascript" src="${url('media', filename='d3.v2.js')}"></script>
+    <script type="text/javascript" src="${url('media', filename='circus.js')}"></script>
 </head>
 <body>
     % if client:
@@ -64,9 +65,9 @@
     </div>
     % endif
     <header>
-        <img id="logo" src="/media/circus.png" border="0" />
+        <img id="logo" src="${url('media', filename='circus.png')}" border="0" />
         % if client:
-            <a href="/disconnect" class="disconnect">Logout</a>
+            <a href="${url('disconnect')}" class="disconnect">Logout</a>
         % endif
     </header>
     <section id="wrapper">
@@ -75,10 +76,10 @@
               <a href="#" class="add_watcher">Add Watcher</a>
               <nav>
                 <ul>
-                  <li><a href="/">Home</a></li>
-                  <li><a href="/#overview">Overview</a></li>
-                  <li><a href="/#options">Options</a></li>
-                  <li><a href="#">Help</a></li>
+                  <li><a href="${url('index')}">Home</a></li>
+                  <li><a href="${url('index')}#overview">Overview</a></li>
+                  <li><a href="${url('index')}#options">Options</a></li>
+                  <li><a href="${url('index')}#">Help</a></li>
                 </ul>
               </nav>
             </aside>

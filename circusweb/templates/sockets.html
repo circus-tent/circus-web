@@ -1,4 +1,5 @@
 <%inherit file="base.html"/>
+<% from bottle import url %>
 
 % if client:
     <div class="title">
@@ -30,7 +31,7 @@
     </div>
     %endfor
 
-<script src="/media/socket.io.js"></script>
+<script src="${url('media', filename='socket.io.js')}"></script>
 <script type="text/javascript">
     $(document).ready(function () {
         var socket = io.connect('${SERVER}');
