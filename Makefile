@@ -8,6 +8,10 @@ bin/python:
 	virtualenv $(VTENV_OPTS) .
 	bin/python setup.py develop
 
+build: bin/python
+	bin/python setup.py develop
+
+
 test: bin/python
 	bin/pip install tox
 	bin/tox
@@ -23,8 +27,6 @@ bin/coverage: bin/python
 	bin/pip install -r test-requirements.txt --use-mirrors
 	bin/pip install nose coverage
 
-build_rpm:
-	bin/python setup.py bdist_rpm --requires "python26 python-setuptools pyzmq python26-psutil"
 
 clean:
 	rm -rf bin .tox include/ lib/ man/ circus.egg-info/ build/
