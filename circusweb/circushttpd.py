@@ -151,7 +151,6 @@ def main():
     parser.add_argument('--log-output', dest='logoutput', default='-',
                         help="log output")
     parser.add_argument('--ssh', default=None, help='SSH Server')
-
     args = parser.parse_args()
 
     if args.version:
@@ -164,7 +163,14 @@ def main():
     if args.endpoint is not None:
         connect_to_circus(args.endpoint, args.ssh)
 
-    run(app, host=args.host, port=args.port, server=args.server, fd=args.fd)
+    try:
+        sys.stderr.write(' ')
+        quiet = False
+    except IOError:
+        quiet = True
+
+    run(app, host=args.host, port=args.port, server=args.server,
+        fd=args.fd, quiet=quiet)
 
 
 if __name__ == '__main__':
