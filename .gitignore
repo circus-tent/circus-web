@@ -1,5 +1,8 @@
 *.py[cod]
 
+# VIM undo files
+*.un~
+
 # C extensions
 *.so
 
