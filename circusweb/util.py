@@ -1,7 +1,7 @@
 import os
 
 from mako.lookup import TemplateLookup
-from bottle import request, route as route_, redirect
+from bottle import request, route as route_, url, redirect
 
 from circusweb import logger, __version__
 from circusweb.controller import CallError
@@ -88,7 +88,7 @@ def route(*args, **kwargs):
                         # XXX we need to pass SSH too here
                         connect_to_circus(session['endpoint'])
                     else:
-                        return redirect('/connect')
+                        return redirect(url('connect'))
 
             return func(*fargs, **fkwargs)
         return route_(*args, **kwargs)(client_or_redirect)
