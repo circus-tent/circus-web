@@ -7,8 +7,9 @@ import re
 from webtest import TestApp
 import gevent
 
-from circusweb.circushttpd import app
+from circusweb.circushttpd import app, setup_auto_discovery
 from circus.tests.support import TestCircus
+from circus.util import DEFAULT_ENDPOINT_MULTICAST
 from circus.stream import QueueStream
 
 
@@ -25,6 +26,8 @@ class TestHttpd(TestCircus):
                "from circus import circusd; circusd.main()", cfg]
         self.p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
+        # Start auto discovery thread
+        setup_auto_discovery(DEFAULT_ENDPOINT_MULTICAST)
 
     def tearDown(self):
         self.p.terminate()
