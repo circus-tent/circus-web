@@ -17,7 +17,7 @@ from circusweb.namespace import StatsNamespace
 from circusweb import __version__, logger
 from circus.util import configure_logger, LOG_LEVELS
 from circusweb.util import (run_command, render_template, set_message, route,
-                            MEDIADIR)
+                            MEDIADIR, AutoDiscoveryThread)
 from circusweb.session import connect_to_circus, disconnect_from_circus
 from circusweb.server import SocketIOServer
 
@@ -101,7 +101,8 @@ def connect():
     POST body.
     """
     def _ask_connection():
-        return render_template('connect.html')
+        return render_template('connect.html',
+                               endpoints=app.discovery_thread.get_endpoints())
 
     if request.method == 'GET':
         return _ask_connection()
@@ -111,7 +112,14 @@ def connect():
         if request.forms.endpoint is None:
             return _ask_connection()
 
-        endpoint = request.forms.endpoint
+        endpoint_input = request.forms.endpoint
+        endpoint_select = request.forms.endpoint_select
+
+        if endpoint_select:
+            endpoint = endpoint_select
+        else:
+            endpoint = endpoint_input
+
         client = connect_to_circus(endpoint)
         if not client.connected:
             set_message('Impossible to connect')
@@ -151,6 +159,11 @@ def main():
     parser.add_argument('--log-output', dest='logoutput', default='-',
                         help="log output")
     parser.add_argument('--ssh', default=None, help='SSH Server')
+    parser.add_argument('--multicast', dest="multicast",
+                        default="udp://237.219.251.97:12027",
+                        help="Multicast endpoint. If not specified, Circus "
+                             "will use default one")
+
     args = parser.parse_args()
 
     if args.version:
@@ -169,8 +182,15 @@ def main():
     except IOError:
         quiet = True
 
+    setup_auto_discovery(args.multicast)
     run(app, host=args.host, port=args.port, server=args.server,
         fd=args.fd, quiet=quiet)
+
+
+def setup_auto_discovery(multicast_endpoint):
+    app.discovery_thread = AutoDiscoveryThread(multicast_endpoint)
+    app.discovery_thread.daemon = True
+    app.discovery_thread.start()
 
 
 if __name__ == '__main__':
