@@ -1,110 +1,84 @@
-from socketio.mixins import RoomsMixin, BroadcastMixin
-from socketio.namespace import BaseNamespace
-
-from circus.stats.client import StatsClient
-from circusweb.session import get_client
+import tornadio2
+from tornado import gen
+from collections import defaultdict
 
 
-class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
+class SocketIOConnection(tornadio2.SocketConnection):
+
+    participants = defaultdict(set)
 
     def __init__(self, *args, **kwargs):
-        super(StatsNamespace, self).__init__(*args, **kwargs)
-        self._running = True
+        super(SocketIOConnection, self).__init__(*args, **kwargs)
+        self.stats_endpoints = []
 
-    def on_get_stats(self, msg):
-        """This method is the one way to start a conversation with the socket.
-        When sending a message here, the parameters are packt into the msg
-        dictionary, which contains:
+    def on_close(self):
+        from circusweb.session import get_controller  # Circular import
+        controller = get_controller()
+        for endpoint in self.stats_endpoints:
+            self.participants[endpoint].discard(self)
+            controller.disconnect_stats_endpoint(endpoint)
 
-            - "streams", a list of streams that the client want to be notified
-              about.
-            - "get_processes", if it wants to include the subprocesses managed
-              by this watcher or not (optional, defaults to False)
+    @tornadio2.event
+    @gen.coroutine
+    def get_stats(self, watchers=[], watchersWithPids=[],
+                  endpoints=[], stats_endpoints=[]):
+        from circusweb.session import get_controller  # Circular import
+        controller = get_controller()
 
-        The server sends back to the client some messages, on different
-        channels:
-
-            - "stats-<watchername>" sends memory and cpu info for the
-              aggregation of stats.
-            - stats-<watchername>-pids sends the list of pids for this watcher
-            - "stats-<watchername>-<pid>" sends the information about
-              specific pids for the different watchers (works only if
-              "get_processes" is set to True when calling this method)
-            - "socket-stats" send the aggregation information about
-               sockets.
-            - "socket-stats-<fd>" sends information about a particular fd.
-        """
-
-        # unpack the params
-        streams = msg.get('watchers', [])
-        streams_with_pids = msg.get('watchersWithPids', [])
-
-        # if we want to supervise the processes of a watcher, then send the
-        # list of pids trough a socket. If we asked about sockets, do the same
-        # with their fds
-        client = get_client()
-        for watcher in streams_with_pids:
+        for watcher in watchersWithPids:
             if watcher == "sockets":
-                fds = [s['fd'] for s in client.get_sockets()]
-                self.send_data('socket-stats-fds', fds=fds)
+                sockets = yield gen.Task(controller.get_sockets,
+                                         endpoint=endpoints[0])
+                fds = [s['fd'] for s in sockets]
+                self.emit('socket-stats-fds', fds=fds)
             else:
-                pids = [int(pid) for pid in client.get_pids(watcher)]
+                pids = yield gen.Task(controller.get_pids, watcher, endpoints)
+                pids = [int(pid) for pid in pids]
                 channel = 'stats-{watcher}-pids'.format(watcher=watcher)
-                self.send_data(channel, pids=pids)
+                self.emit(channel, pids=pids)
 
-        # Get the channels that are interesting to us and send back information
-        # there when we got them.
-        stats = StatsClient(endpoint=client.stats_endpoint)
-        for watcher, pid, stat in stats:
-            if not self._running:
-                return
+        self.watchers = watchers
 
+        self.watchersWithPids = watchersWithPids
+        self.stats_endpoints = stats_endpoints
+
+        for endpoint in stats_endpoints:
+            controller.connect_to_stats_endpoint(endpoint)
+            self.participants[endpoint].add(self)
+
+    @classmethod
+    def consume_stats(cls, watcher, pid, stat, endpoint):
+        for p in cls.participants[endpoint]:
             if watcher == 'sockets':
                 # if we get information about sockets and we explicitely
                 # requested them, send back the information.
-                if 'sockets' in streams_with_pids and 'fd' in stat:
-                    self.send_data('socket-stats-{fd}'.format(fd=stat['fd']),
-                                   **stat)
-                elif 'sockets' in streams and 'addresses' in stat:
-                    self.send_data('socket-stats', reads=stat['reads'],
-                                   adresses=stat['addresses'])
+                if 'sockets' in p.watchersWithPids and 'fd' in stat:
+                    p.emit('socket-stats-{fd}'.format(fd=stat['fd']),
+                           **stat)
+                elif 'sockets' in p.watchers and 'addresses' in stat:
+                    p.emit('socket-stats', reads=stat['reads'],
+                           adresses=stat['addresses'])
             else:
-                available_watchers = streams + streams_with_pids + ['circus']
+                available_watchers = p.watchers + p.watchersWithPids + \
+                    ['circus']
                 # these are not sockets but normal watchers
                 if watcher in available_watchers:
                     if (watcher == 'circus'
                             and stat.get('name', None) in available_watchers):
-                        self.send_data(
+                        p.emit(
                             'stats-{watcher}'.format(watcher=stat['name']),
                             mem=stat['mem'], cpu=stat['cpu'], age=stat['age'])
                     else:
                         if pid is None:  # means that it's the aggregation
-                            self.send_data(
+                            p.emit(
                                 'stats-{watcher}'.format(watcher=watcher),
                                 mem=stat['mem'], cpu=stat['cpu'],
                                 age=stat['age'])
                         else:
-                            if watcher in streams_with_pids:
-                                self.send_data(
+                            if watcher in p.watchersWithPids:
+                                p.emit(
                                     'stats-{watcher}-{pid}'.format(
                                         watcher=watcher, pid=pid),
                                     mem=stat['mem'],
                                     cpu=stat['cpu'],
                                     age=stat['age'])
-
-    def send_data(self, topic, **kwargs):
-        """Send the given dict encoded into json to the listening socket on the
-        browser side.
-
-        :param topic: the topic to send the information to
-        :param **kwargs: the dict to serialize and send
-        """
-        pkt = dict(type="event", name=topic, args=kwargs,
-                   endpoint=self.ns_name)
-        self.socket.send_packet(pkt)
-
-    def recv_disconnect(self):
-        """When we receive a disconnect from the client, we want to make sure
-        that we close the socket we just opened at the begining of the stat
-        exchange."""
-        self._running = False

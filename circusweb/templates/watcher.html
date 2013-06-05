@@ -1,12 +1,11 @@
 <%inherit file="base.html"/>
-<% from bottle import url %>
 
-% if client:
+% if controller:
     <div class="title">
      <div class="watcher_name">Watcher <strong>${name}</strong>
-      <a style="display:inline-block;" class="${client.get_status(name)}"
-         title="${client.get_status(name)}" href="${url('switch_status', name=name)}?redirect=${url('watcher', name=name)}"></a></div>
-      <div class="watcher_description"><strong>${client.get_option(name, 'numprocesses')}</strong> <span>processes</span>
+      <a style="display:inline-block;" class="${controller.get_status(name, endpoints[0])}"
+         title="${controller.get_status(name, endpoints[0])}" href="${reverse_url('switch_status', b64encode(endpoints[0]), name)}?redirect=${reverse_url('watcher', name)}"></a></div>
+      <div class="watcher_description"><strong>${controller.get_option(name, 'numprocesses', endpoints[0])}</strong> <span>processes</span>
      </div>
     </div>
 
@@ -22,14 +21,14 @@
     </div>
 
     <div class="box">
-    %for pid in client.get_pids(name):
+    %for pid in pids:
     <div class="process">
         <div>
             <span style="display: inline-block; float: left;" class="label">Process #${pid}</span><span id="${name}-${pid}_last_age" class="age-stat"></span>
 
             <span style="display: inline-block; float: right;">
-                <a href="${url('kill_process', name=name, pid=pid)}" title="Kill">
-                    <img src="${url('media', filename='kill.png')}" border="0" alt="Kill" />
+                <a href="${reverse_url('kill_process', b64encode(endpoints[0]), name, pid)}" title="Kill">
+                    <img src="${static_url('kill.png')}" border="0" alt="Kill" />
                 </a>
             </span>
         </div>
@@ -47,13 +46,13 @@
         </div>
     </div>
     %endfor
-    %if not client.get_option(name, 'singleton'):
+    %if not controller.get_option(name, 'singleton', endpoints[0]):
     <div class="process">
         <div>
             <span class="label">Add process</span>
         </div>
         <div class="stat">
-             <a class="add_process" title="Add process" href="${url('incr_proc', name=name)}?redirect=${url('watcher', name=name)}">+</a>
+             <a class="add_process" title="Add process" href="${reverse_url('incr_proc', b64encode(endpoints[0]), name)}?redirect=${reverse_url('watcher', name)}">+</a>
         </div>
     </div>
     %endif
@@ -65,7 +64,7 @@
     </div>
 
     <%
-       options = dict(client.get_options(name))
+       options = dict(controller.get_options(name, endpoints[0]))
      %>
 
     <table class="options">
@@ -131,9 +130,9 @@
             Number of processes
             </td>
             <td class="value">
-                <a href="${url('incr_proc', name=name)}?redirect=${url('watcher', name=name)}"><span class="orangelabel">+</span></a>
+                <a href="${reverse_url('incr_proc', b64encode(endpoints[0]), name)}?redirect=${reverse_url('watcher', name)}"><span class="orangelabel">+</span></a>
                 <span class="num_process">${options['numprocesses']}</span>
-                <a href="${url('decr_proc', name=name)}?redirect=${url('watcher', name=name)}"><span class="orangelabel">-</span></a>
+                <a href="${reverse_url('decr_proc', b64encode(endpoints[0]), name)}?redirect=${reverse_url('watcher', name)}"><span class="orangelabel">-</span></a>
             </td>
         </tr>
         <tr>
@@ -154,11 +153,11 @@
         </tr>
     </table>
 
-<script src="${url('media', filename='socket.io.js')}"></script>
+<script src="${static_url('socket.io.js')}"></script>
 <script type="text/javascript">
     $(document).ready(function () {
         var socket = io.connect('${SERVER}');
-        supervise(socket, [], ['${name}']);
+        supervise(socket, [], ['${name}'], ${dumps(endpoints)}, ${dumps(stats_endpoints)});
     });
 </script>
 

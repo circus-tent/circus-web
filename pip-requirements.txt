@@ -1,11 +1,8 @@
-Mako==0.7.0
-MarkupSafe==0.15
-bottle==0.10.9
+Mako
+MarkupSafe
 anyjson
-gevent-socketio
-gevent-websocket==0.3.6
-greenlet
-beaker==1.6.3
-pyzmq==2.2.0.1
+pyzmq
 circus
-gevent
+tornado
+TornadIO2
+tomako

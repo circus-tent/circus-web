@@ -1,6 +1,4 @@
 <%inherit file="base.html"/>
-<% from bottle import url %>
-<% goptions = dict(client.get_global_options()) %>
 
 <div class="title">
     <div style="float: left;" class="watcher_name">Watchers</div>
@@ -21,16 +19,16 @@
         <div style="width: 50px;">gid</div>
         <div style="width: 50px;">Status</div>
     </div>
-% for watcher, options in client.watchers:
-    % if watcher not in client.plugins:
+% for watcher, options in controller.get_client(endpoints[0]).watchers:
+    % if watcher not in controller.get_client(endpoints[0]).plugins:
     <div class="watcher">
-        <div style="width: 300px;"><a class="link" href="${url('watcher', name=watcher)}">${watcher}</a></div>
+        <div style="width: 300px;"><a class="link" href="${reverse_url('watcher', watcher)}">${watcher}</a></div>
         <div style="width: 80px;">${options['numprocesses']}</div>
         <div style="width: 342px;">${options['cmd']} ${options['args']}</div>
         <div style="width: 50px;">${options['shell']}</div>
         <div style="width: 50px;">${options['uid']}</div>
         <div style="width: 50px;">${options['gid']}</div>
-        <div style="width: 50px;"><a class="${client.get_status(watcher)}" title="${client.get_status(watcher)}" href="${url('switch_status', name=watcher)}"></a></div>
+        <div style="width: 50px;"><a class="${controller.get_status(watcher, endpoints[0])}" title="${controller.get_status(watcher, endpoints[0])}" href="${reverse_url('switch_status', b64encode(endpoints[0]), watcher)}"></a></div>
     </div>
     %endif
 %endfor
@@ -49,7 +47,7 @@
         <span class="legend_indicator"></span>
         <span class="">Memory</span>
     </div>
-    %if client.use_sockets:
+    %if controller.get_client(endpoints[0]).use_sockets:
     <div class="legend_reads">
         <span class="legend_indicator"></span>
         <span class="">Socket reads</span>
@@ -66,7 +64,7 @@
 	<span class="age-stat" id="${watcher}_last_age"></span>
 
         %if display_status:
-        <div style="width: 20px; float: right; margin-right: 10px;"><a class="${client.get_status(watcher)}" title="${client.get_status(watcher)}" href="${url('switch_status', name=watcher)}"></a></div>
+        <div style="width: 20px; float: right; margin-right: 10px;"><a class="${controller.get_status(watcher, endpoints[0])}" title="${controller.get_status(watcher, endpoints[0])}" href="${reverse_url('switch_status', name=watcher)}"></a></div>
         %endif
     </div>
 
@@ -94,15 +92,15 @@
  ${draw_graph_div('circus')}
  ${draw_graph_div('circusd-stats')}
 
- %if client.embed_httpd:
+ %if controller.get_client(endpoints[0]).embed_httpd:
  ${draw_graph_div('circushttpd', 'circushttpd')}
  %endif
 
- %if client.use_sockets:
- ${draw_graph_div('socket-stats', 'Socket Activity (<a href="' + url('sockets') + '">see all the sockets</a>)', socket=True)}
+ %if controller.get_client(endpoints[0]).use_sockets:
+ ${draw_graph_div('socket-stats', 'Socket Activity (<a href="' + reverse_url('sockets') + '">see all the sockets</a>)', socket=True)}
  %endif
 
- %for plugin in client.plugins:
+ %for plugin in controller.get_client(endpoints[0]).plugins:
      ${draw_graph_div(plugin, plugin.split(':')[1].replace('-', '.'), True)}
  %endfor
 
@@ -158,20 +156,20 @@ $(document).ready(function () {
     var socket = io.connect('${SERVER}');
     var watchers = ['circusd-stats', 'circus'];
 
-    %if client.use_sockets:
+    %if controller.get_client(endpoints[0]).use_sockets:
         watchers.push('sockets');
     %endif
 
-    %if client.embed_httpd:
+    %if controller.get_client(endpoints[0]).embed_httpd:
         watchers.push('circushttpd');
     %endif
 
 
-    %for plugin in client.plugins:
+    %for plugin in controller.get_client(endpoints[0]).plugins:
         watchers.push('${plugin}');
     %endfor
 
-    supervise(socket, watchers);
+    supervise(socket, watchers, undefined, ${dumps(endpoints)}, ${dumps(stats_endpoints)});
 });
 
 </script>

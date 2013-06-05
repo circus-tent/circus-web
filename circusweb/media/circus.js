@@ -57,7 +57,7 @@ function hookGraph(socket, watcher, metrics, prefix, capValues, config) {
 }
 
 
-function supervise(socket, watchers, watchersWithPids, config) {
+function supervise(socket, watchers, watchersWithPids, endpoints, stats_endpoints, config) {
 
     if (watchersWithPids == undefined) { watchersWithPids = []; }
     if (config == undefined) { config = DEFAULT_CONFIG; }
@@ -91,9 +91,15 @@ function supervise(socket, watchers, watchersWithPids, config) {
         }
     });
 
+    console.log({ watchers: watchers,
+                               watchersWithPids: watchersWithPids,
+                               stats_endpoints: stats_endpoints});
+
     // start the streaming of data, once the callbacks in place.
     socket.emit('get_stats', { watchers: watchers,
-                               watchersWithPids: watchersWithPids});
+                               watchersWithPids: watchersWithPids,
+                               endpoints: endpoints,
+                               stats_endpoints: stats_endpoints});
 }
 
 $(document).ready(function() {

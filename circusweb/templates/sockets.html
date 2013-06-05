@@ -1,7 +1,6 @@
 <%inherit file="base.html"/>
-<% from bottle import url %>
 
-% if client:
+% if controller:
     <div class="title">
      <div class="watcher_name">All sockets activity</div>
     </div>
@@ -14,7 +13,7 @@
     </div>
 
     <div class="box">
-    %for socket in client.get_sockets():
+    %for socket in sockets:
     <div class="process">
       <div>
         %if 'host' in socket:
@@ -37,13 +36,12 @@
     </div>
     %endfor
 
-<script src="${url('media', filename='socket.io.js')}"></script>
+<script src="${static_url('socket.io.js')}"></script>
 <script type="text/javascript">
     $(document).ready(function () {
         var socket = io.connect('${SERVER}');
-        supervise(socket, [], ['sockets']);
+        supervise(socket, [], ['sockets'], ${dumps(endpoints)}, ${dumps(stats_endpoints)});
     });
 </script>
 
 % endif
-

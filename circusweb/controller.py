@@ -1,109 +1,104 @@
-from collections import defaultdict
-import threading
-from gevent import local
-
-if not threading.local is local.local:
-    from gevent import monkey
-    monkey.patch_all()
-
-import zmq.eventloop as old_io
-import zmq.green
-old_io.ioloop.Poller = zmq.green.Poller
-
-import circus
-import circus.client
-import circus.consumer
-
-circus.consumer.zmq = circus.zmq = circus.client.zmq = zmq.green
-
+from itertools import chain
 from circus.commands import get_commands
-from circus.client import CircusClient, CallError
+from circusweb.client import AsynchronousCircusClient
+from circusweb.stats_client import AsynchronousStatsConsumer
+from circusweb.namespace import SocketIOConnection
 
+from tornado import gen
 
 cmds = get_commands()
 
 
-class LiveClient(object):
-    def __init__(self, endpoint, ssh_server=None):
-        self.endpoint = str(endpoint)
-        self.stats_endpoint = None
-        self.client = CircusClient(endpoint=self.endpoint,
-                                   ssh_server=ssh_server)
-        self.connected = False
-        self.watchers = []
-        self.plugins = []
-        self.stats = defaultdict(list)
-        self.dstats = []
-        self.sockets = None
-        self.use_sockets = False
-        self.embed_httpd = False
+class Controller(object):
+    def __init__(self, loop, ssh_server=None):
+        self.clients = {}
+        self.stats_clients = {}
+        self.loop = loop
+        self.ssh_server = ssh_server
 
-    def stop(self):
-        self.client.stop()
+    @gen.coroutine
+    def connect(self, endpoint):
+        endpoint = str(endpoint)
+        if endpoint not in self.clients:
+            client = AsynchronousCircusClient(self.loop, endpoint,
+                                              ssh_server=self.ssh_server)
+            yield gen.Task(client.update_watchers)
+        else:
+            client = self.get_client(endpoint)
+        client.count += 1
+        self.clients[endpoint] = client
 
-    def update_watchers(self):
-        """Calls circus and initialize the list of watchers.
+    def disconnect(self, endpoint):
+        endpoint = str(endpoint)
+        if not endpoint in self.clients:
+            return
+        self.clients[endpoint].count -= 1
 
-        If circus is not connected raises an error.
-        """
-        self.watchers = []
-        self.plugins = []
+        if self.clients[endpoint].count <= 0:
+            del self.clients[endpoint]
 
-        # trying to list the watchers
-        try:
-            self.connected = True
-            for watcher in self.client.send_message('list')['watchers']:
-                if watcher in ('circusd-stats', 'circushttpd'):
-                    if watcher == 'circushttpd':
-                        self.embed_httpd = True
-                    continue
+    def connect_to_stats_endpoint(self, stats_endpoint):
+        stats_endpoint = str(stats_endpoint)
+        if stats_endpoint in self.stats_clients:
+            return
 
-                options = self.client.send_message('options',
-                                                   name=watcher)['options']
-                self.watchers.append((watcher, options))
-                if watcher.startswith('plugin:'):
-                    self.plugins.append(watcher)
+        stats_client = AsynchronousStatsConsumer(
+            ['stat.'], self.loop,
+            SocketIOConnection.consume_stats, endpoint=stats_endpoint,
+            ssh_server=self.ssh_server)
 
-                if not self.use_sockets and options.get('use_sockets', False):
-                    self.use_sockets = True
+        stats_client.count += 1
+        self.stats_clients[stats_endpoint] = stats_client
 
-            self.watchers.sort()
-            self.stats_endpoint = self.get_global_options()['stats_endpoint']
-            if self.endpoint.startswith('tcp://'):
-                # In case of multi interface binding i.e: tcp://0.0.0.0:5557
-                anyaddr = '0.0.0.0'
-                ip = self.endpoint.lstrip('tcp://').split(':')[0]
-                self.stats_endpoint = self.stats_endpoint.replace(anyaddr, ip)
-        except CallError:
-            self.connected = False
+    def disconnect_stats_endpoint(self, stats_endpoint):
+        stats_endpoint = str(stats_endpoint)
+        if not stats_endpoint in self.stats_clients:
+            return
+        self.stats_clients[stats_endpoint].count -= 1
 
-    def killproc(self, name, pid):
-        # killing a proc and its children
-        res = self.client.send_message('signal', name=name, pid=int(pid),
-                                       signum=9, recursive=True)
-        self.update_watchers()  # will do better later
-        return res
+        if self.stats_clients[stats_endpoint].count <= 0:
+            del self.stats_clients[stats_endpoint]
 
-    def get_option(self, name, option):
-        watchers = dict(self.watchers)
+    def get_client(self, endpoint):
+        return self.clients.get(endpoint)
+
+    @gen.coroutine
+    def killproc(self, name, pid, endpoint):
+        client = self.get_client(endpoint)
+        res = yield gen.Task(client.send_message, 'signal', name=name,
+                             pid=int(pid), signum=9, recursive=True)
+        yield gen.Task(client.update_watchers)  # will do better later
+        raise gen.Return(res)
+
+    def get_option(self, name, option, endpoint):
+        client = self.get_client(endpoint)
+        watchers = dict(client.watchers)
         return watchers[name][option]
 
-    def get_global_options(self):
-        return self.client.send_message('globaloptions')['options']
+    @gen.coroutine
+    def get_global_options(self, endpoint):
+        client = self.get_client(endpoint)
+        res = yield gen.Task(client.send_message, 'globaloptions')
+        raise gen.Return(res['options'])
 
-    def get_options(self, name):
-        watchers = dict(self.watchers)
+    def get_options(self, name, endpoint):
+        client = self.get_client(endpoint)
+        watchers = dict(client.watchers)
         return watchers[name].items()
 
-    def incrproc(self, name):
-        res = self.client.send_message('incr', name=name)
-        self.update_watchers()  # will do better later
-        return res
+    @gen.coroutine
+    def incrproc(self, name, endpoint):
+        client = self.get_client(endpoint)
+        res = yield gen.Task(client.send_message, 'incr', name=name)
+        yield gen.Task(client.update_watchers)  # will do better later
+        raise gen.Return(res)
 
-    def decrproc(self, name):
-        res = self.client.send_message('decr', name=name)
-        self.update_watchers()  # will do better later
-        return res
+    @gen.coroutine
+    def decrproc(self, name, endpoint):
+        client = self.get_client(endpoint)
+        res = yield gen.Task(client.send_message, 'decr', name=name)
+        yield gen.Task(client.update_watchers)  # will do better later
+        raise gen.Return(res)
 
     def get_stats(self, name, start=0, end=-1):
         return self.stats[name][start:end]
@@ -115,50 +110,54 @@ class LiveClient(object):
             res.append(stat[field])
         return res
 
-    def get_pids(self, name):
-        res = self.client.send_message('list', name=name)
-        return res['pids']
+    @gen.coroutine
+    def get_pids(self, name, endpoints):
+        tasks = []
+        for endpoint in endpoints:
+            client = self.get_client(endpoint)
+            tasks.append(gen.Task(client.send_message, 'list', name=name))
+        res = yield tasks
+        raise gen.Return(chain.from_iterable(r['pids'] for r in res))
 
-    def get_sockets(self, force_reload=False):
-        if not self.sockets or force_reload:
-            res = self.client.send_message('listsockets')
-            self.sockets = res['sockets']
-        return self.sockets
+    @gen.coroutine
+    def get_sockets(self, endpoint, force_reload=False):
+        client = self.get_client(endpoint)
+        if not client.sockets or force_reload:
+            res = yield gen.Task(client.send_message, 'listsockets')
+            client.sockets = res['sockets']
+        raise gen.Return(client.sockets)
 
-    def get_series(self, name, pid, field, start=0, end=-1):
-        stats = self.get_stats(name, start, end)
-        res = []
-        for stat in stats:
-            pids = stat['pid']
-            if isinstance(pids, list):
-                continue
-            if str(pid) == str(stat['pid']):
-                res.append(stat[field])
-        return res
+    def get_status(self, name, endpoint):
+        client = self.get_client(endpoint)
+        res = client.send_message('status', name=name)
+        return res['status']
 
-    def get_status(self, name):
-        return self.client.send_message('status', name=name)['status']
-
-    def switch_status(self, name):
+    @gen.coroutine
+    def switch_status(self, name, endpoint):
         msg = cmds['status'].make_message(name=name)
-        res = self.client.call(msg)
+        client = self.get_client(endpoint)
+        res = yield gen.Task(client.call, msg)
         status = res['status']
         if status == 'active':
             # stopping the watcher
             msg = cmds['stop'].make_message(name=name)
         else:
             msg = cmds['start'].make_message(name=name)
-        res = self.client.call(msg)
-        return res
+        res = yield gen.Task(self.client.call, msg)
 
-    def add_watcher(self, name, cmd, **kw):
-        res = self.client.send_message('add', name=name, cmd=cmd)
+        raise gen.Return(res)
+
+    @gen.coroutine
+    def add_watcher(self, name, endpoint, cmd, **kw):
+        client = self.get_client(endpoint)
+        res = yield gen.Task(client.send_message, 'add', name=name, cmd=cmd)
         if res['status'] == 'ok':
             # now configuring the options
             options = {}
             options['numprocesses'] = int(kw.get('numprocesses', '5'))
             options['working_dir'] = kw.get('working_dir')
             options['shell'] = kw.get('shell', 'off') == 'on'
-            res = self.client.send_message('set', name=name, options=options)
-            self.update_watchers()  # will do better later
-        return res
+            res = yield gen.Task(client.send_message, 'set',
+                                 name=name, options=options)
+            yield gen.Task(client.update_watchers)
+        raise gen.Return(res)
