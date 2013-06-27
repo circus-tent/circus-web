@@ -1,8 +1,7 @@
 import socket
-from bottle import ServerAdapter
 
 
-class SocketIOServer(ServerAdapter):
+class SocketIOServer(object):
     def __init__(self, host='127.0.0.1', port=8080, **config):
         super(SocketIOServer, self).__init__(host, port, **config)
         self.fd = config.get('fd')
@@ -14,9 +13,6 @@ class SocketIOServer(ServerAdapter):
             from socketio.server import SocketIOServer
         except ImportError:
             raise ImportError('You need to install gevent_socketio')
-
-        # sets up the ZMQ/Gevent environ
-        from circus import _patch   # NOQA
 
         namespace = self.options.get('namespace', 'socket.io')
         policy_server = self.options.get('policy_server', False)

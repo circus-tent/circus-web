@@ -1,5 +1,4 @@
 <!doctype html>
-<% from bottle import url %>
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -13,24 +12,24 @@
     <!--[if IE]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <link rel="stylesheet" href="${url('media', filename='circus.css')}" type="text/css" />
-    <link rel="shortcut icon" href="${url('media', filename='favicon.ico')}"/>
-    <link rel="shortcut icon" type="image/x-icon" href="${url('media', filename='favicon.ico')}" />
-    <script type="text/javascript" src="${url('media', filename='socket.io.js')}"></script>
-    <script type="text/javascript" src="${url('media', filename='jquery.min.js')}"></script>
-    
-    <script type="text/javascript" src="${url('media', filename='rickshaw.min.js')}"></script>
-    <script type="text/javascript" src="${url('media', filename='d3.v2.js')}"></script>
-    <script type="text/javascript" src="${url('media', filename='circus.js')}"></script>
+    <link rel="stylesheet" href="${static_url('circus.css')}" type="text/css" />
+    <link rel="shortcut icon" href="${static_url('favicon.ico')}"/>
+    <link rel="shortcut icon" type="image/x-icon" href="${static_url('favicon.ico')}" />
+    <script type="text/javascript" src="${static_url('socket.io.js')}"></script>
+    <script type="text/javascript" src="${static_url('jquery.min.js')}"></script>
+
+    <script type="text/javascript" src="${static_url('rickshaw.min.js')}"></script>
+    <script type="text/javascript" src="${static_url('d3.v2.js')}"></script>
+    <script type="text/javascript" src="${static_url('circus.js')}"></script>
 </head>
 <body>
-    % if client:
+    % if user:
     <div id="overlay" style="display:none;">
         <div class="overlay">
             <div class="dialog-header">
                 <h3>Add Watcher</h3>
             </div>
-            <form action="add_watcher" method="POST">
+            <form action="${reverse_url('add_watcher', b64encode(endpoints[0]))}" method="POST">
 
                 <p>
                     <label for="name">Name</label>
@@ -65,21 +64,21 @@
     </div>
     % endif
     <header>
-        <img id="logo" src="${url('media', filename='circus.png')}" border="0" />
-        % if client:
-            <a href="${url('disconnect')}" class="disconnect">Logout</a>
+        <a href="/"><img id="logo" src="${static_url('circus.png')}" border="0" /></a>
+        % if user:
+            <a href="${reverse_url('disconnect')}" class="disconnect">Logout</a>
         % endif
     </header>
     <section id="wrapper">
-        % if client:
-            <aside> 
+        % if user:
+            <aside>
               <a href="#" class="add_watcher">Add Watcher</a>
               <nav>
                 <ul>
-                  <li><a href="${url('index')}">Home</a></li>
-                  <li><a href="${url('index')}#overview">Overview</a></li>
-                  <li><a href="${url('index')}#options">Options</a></li>
-                  <li><a href="${url('index')}#">Help</a></li>
+                  <li><a href="${reverse_url('index')}">Home</a></li>
+                  <li><a href="${reverse_url('index')}#overview">Overview</a></li>
+                  <li><a href="${reverse_url('index')}#options">Options</a></li>
+                  <li><a href="${reverse_url('index')}#">Help</a></li>
                 </ul>
               </nav>
             </aside>
@@ -87,16 +86,11 @@
         % else:
             <section id="login">
         % endif
-        % if 'message' in session:
-            <div class="note">
-                ${session.pop('message')}
-            </div>
-        %endif
         ${self.body()}
-        </section>  
+        </section>
     </section>
 
-    <footer> 
+    <footer>
         &copy; Copyright 2012, The Mozilla Foundation - circushttpd v.${version}
     </footer>
 

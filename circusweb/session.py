@@ -1,45 +1,33 @@
-from bottle import request
-from circusweb.controller import LiveClient
+from circusweb.controller import Controller
+from tornado import gen
 
-_CLIENT = None
-
-
-def get_client():
-    return _CLIENT
+_CONTROLLER = None
 
 
-def set_client(client):
-    global _CLIENT
-    _CLIENT = client
+def get_controller():
+    return _CONTROLLER
 
 
-def get_session():
-    environ = getattr(request, 'environ', None)
-    if environ is None:
-        return None
-    return request.environ.get('beaker.session')
+def set_controller(controller):
+    global _CONTROLLER
+    _CONTROLLER = controller
 
 
-def disconnect_from_circus():
-    client = get_client()
-
-    if client is not None:
-        client.stop()
-        set_client(None)
-        session = get_session()
-        if session is not None:
-            session.pop('endpoint')
-            session.save()
+def disconnect_from_circus(endpoint):
+    controller = get_controller()
+    if controller is not None:
+        controller.disconnect(endpoint)
         return True
     return False
 
 
-def connect_to_circus(endpoint, ssh_server=None):
-    client = LiveClient(endpoint=endpoint, ssh_server=ssh_server)
-    client.update_watchers()
-    set_client(client)
-    session = get_session()
-    if session is not None:
-        session['endpoint'] = endpoint
-        session.save()
-    return client
+@gen.coroutine
+def connect_to_circus(loop, endpoint, ssh_server=None):
+    if get_controller() is None:
+        controller = Controller(loop, ssh_server=ssh_server)
+        set_controller(controller)
+    else:
+        controller = get_controller()
+
+    yield gen.Task(controller.connect, endpoint)
+    set_controller(controller)
