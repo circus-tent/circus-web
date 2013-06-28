@@ -6,6 +6,9 @@ import json
 from base64 import b64encode, b64decode
 from zmq.eventloop import ioloop
 
+# Install zmq.eventloop to replace tornado.ioloop
+ioloop.install()
+
 try:
     import tornado.httpserver
     import tornado.ioloop
@@ -359,9 +362,6 @@ def main():
         connect_to_circus(args.endpoint, args.ssh)
 
     options.parse_command_line()
-
-    # Install zmq.eventloop to replace tornado.ioloop
-    ioloop.install()
 
     # Get the tornado ioloop singleton
     loop = tornado.ioloop.IOLoop.instance()
