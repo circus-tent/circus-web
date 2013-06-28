@@ -23,7 +23,7 @@
     <script type="text/javascript" src="${static_url('circus.js')}"></script>
 </head>
 <body>
-    % if user:
+    % if session.connected:
     <div id="overlay" style="display:none;">
         <div class="overlay">
             <div class="dialog-header">
@@ -65,12 +65,12 @@
     % endif
     <header>
         <a href="/"><img id="logo" src="${static_url('circus.png')}" border="0" /></a>
-        % if user:
+        % if session.connected:
             <a href="${reverse_url('disconnect')}" class="disconnect">Logout</a>
         % endif
     </header>
     <section id="wrapper">
-        % if user:
+        % if session.connected:
             <aside>
               <a href="#" class="add_watcher">Add Watcher</a>
               <nav>
@@ -86,6 +86,11 @@
         % else:
             <section id="login">
         % endif
+        % for message in messages:
+            <div class="note">
+                ${message}
+            </div>
+        %endfor
         ${self.body()}
         </section>
     </section>
