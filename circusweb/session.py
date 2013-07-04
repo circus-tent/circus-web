@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 from circusweb.controller import Controller
 from tornado import gen
 
@@ -30,4 +32,34 @@ def connect_to_circus(loop, endpoint, ssh_server=None):
         controller = get_controller()
 
     yield gen.Task(controller.connect, endpoint)
-    set_controller(controller)
+
+
+class Session(object):
+
+    def __init__(self):
+        self.messages = []
+        self.endpoints = []
+        self.stats_endpoints = []
+
+    @property
+    def connected(self):
+        return bool(self.endpoints)
+
+
+class SessionManager(object):
+
+    sessions = {}
+
+    @classmethod
+    def get(cls, session_id):
+        return cls.sessions.get(session_id, None)
+
+    @classmethod
+    def new(cls, session_id):
+        session = Session()
+        cls.sessions[session_id] = session
+        return session
+
+    @classmethod
+    def delete(cls, session_id):
+        del cls.sessions[session_id]

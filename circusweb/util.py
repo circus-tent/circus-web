@@ -18,7 +18,7 @@ from circusweb.session import get_controller
 
 @gen.coroutine
 def run_command(command, message, endpoint, redirect_url,
-                redirect_on_error=None, args=None, kwargs=None):
+                redirect_on_error=None, args=None, kwargs=None, session=None):
 
     command = getattr(get_controller(), command)
 
@@ -39,9 +39,8 @@ def run_command(command, message, endpoint, redirect_url,
         message = "An error happened: %s" % e
         redirect_url = redirect_on_error
 
-    if message:
-        print message
-    #     set_message(message)
+    if message and session:
+        session.messages.append(message)
     raise gen.Return(redirect_url)
 
 

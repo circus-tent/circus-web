@@ -131,6 +131,7 @@ class AsynchronousCircusClient(CircusClient):
                 self.stats_endpoint = self.stats_endpoint.replace(anyaddr, ip)
         except CallError:
             self.connected = False
+            raise
 
     @gen.coroutine
     def get_global_options(self):
