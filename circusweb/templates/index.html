@@ -1,7 +1,7 @@
 <%inherit file="base.html"/>
 
 % for endpoint in endpoints:
-<div class="title" style="background-color: #FFD6E1;">
+<div class="title" style="background-color: #D6D6FF;">
     <div style="float: left;" class="watcher_name">${endpoint} Watchers</div>
     <div style="float: right;"><a href="#" class="add_watcher" data-add-url="${reverse_url('add_watcher', b64encode(endpoint))}">Add Watcher</a></div>
 
