@@ -38,8 +38,8 @@ class Session(object):
 
     def __init__(self):
         self.messages = []
-        self.endpoints = []
-        self.stats_endpoints = []
+        self.endpoints = set()
+        self.stats_endpoints = set()
 
     @property
     def connected(self):

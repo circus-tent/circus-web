@@ -40,7 +40,7 @@
 <script type="text/javascript">
     $(document).ready(function () {
         var socket = io.connect('${SERVER}');
-        supervise(socket, [], ['sockets'], ${dumps(endpoints)}, ${dumps(stats_endpoints)});
+        supervise(socket, [], ['sockets'], ${b64encode(endpoint)}, ${dumps([endpoint])}, ${dumps([stats_endpoints[endpoint]])});
     });
 </script>
 

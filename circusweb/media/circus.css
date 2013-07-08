@@ -42,13 +42,13 @@ aside {
     margin-bottom: -500em;
 }
 
-nav {
+nav, #endpoints_list {
     width: 235px;
     border: 0;
     margin-top: 15px;
 }
 
- nav > ul li {
+ nav > ul li, #endpoints_list > ul li {
      list-style: none;
      text-transform: uppercase;
      font-size: 13px;
@@ -57,7 +57,7 @@ nav {
 
  nav > ul li:last-child {    padding-bottom: 0 }
 
- nav > ul li a {
+ nav > ul li a, #endpoints_list > ul li label {
      padding-top: 12px;
      height: 28px;
      display: block;
@@ -67,7 +67,7 @@ nav {
      padding-left: 40px;
  }
 
- nav > ul li a.active, nav > ul li a:hover {
+ nav > ul li a.active, nav > ul li a:hover, #endpoints_list > ul li label.active {
      width: 191px;
      border-right: 4px solid #d4591c;
  }
@@ -285,7 +285,7 @@ footer {
     box-shadow: 0 0 5px #757575;
 }
 
-.add_watcher {
+.add_watcher, .add_endpoint {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;

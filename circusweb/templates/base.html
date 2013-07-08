@@ -29,7 +29,7 @@
             <div class="dialog-header">
                 <h3>Add Watcher</h3>
             </div>
-            <form action="${reverse_url('add_watcher', b64encode(endpoints[0]))}" method="POST">
+            <form action="#" method="POST">
 
                 <p>
                     <label for="name">Name</label>
@@ -72,7 +72,6 @@
     <section id="wrapper">
         % if session.connected:
             <aside>
-              <a href="#" class="add_watcher">Add Watcher</a>
               <nav>
                 <ul>
                   <li><a href="${reverse_url('index')}">Home</a></li>
@@ -80,7 +79,25 @@
                   <li><a href="${reverse_url('index')}#options">Options</a></li>
                   <li><a href="${reverse_url('index')}#">Help</a></li>
                 </ul>
-              </nav>
+			  </nav>
+			  <hr style="margin: 20px 0;"/>
+			  <a href="/disconnect/" class="add_endpoint">Add an endpoint</a>
+			  <form action="${reverse_url('connect')}" method="post" id="endpoints_list">
+				<ul>
+                  % for endpoint in endpoints_list:
+				  <li><label><input type="checkbox" name="endpoint" value="${endpoint}"
+% if endpoint in endpoints: 
+checked="checked"
+% endif
+/> ${endpoint}</label></li>
+				  % endfor
+				</ul>
+			  </form>
+			  <script type="text/javascript">
+				$('#endpoints_list input').change(function() {
+                    this.form.submit();
+                });
+			  </script>
             </aside>
             <section id="content">
         % else:

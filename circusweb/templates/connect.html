@@ -6,8 +6,7 @@
 <input id="endpoint" type="text" name="endpoint" value="tcp://127.0.0.1:5555"/>
 % if endpoints:
     <p>OR</p>
-    <select name="endpoint_select">
-    <option value="">-----</option>
+    <select name="endpoint" multiple="multiple">
     % for endpoint in endpoints:
         <option value="${endpoint}">${endpoint}</option>
     % endfor
