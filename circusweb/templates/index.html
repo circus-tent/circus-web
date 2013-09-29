@@ -169,7 +169,7 @@ $(document).ready(function () {
     %for plugin in controller.get_client(endpoint).plugins:
         watchers.push('${plugin}');
     %endfor
-    supervise(socket, watchers, undefined, ${map(b64encode, endpoints)}, ${dumps(endpoints)}, ${dumps(stats_endpoints)});
+    supervise(socket, watchers, undefined, ${map(b64encode, endpoints)}, ${dumps(endpoints)}, ${dumps(stats_endpoints.values())});
 });
 </script>
 % endfor

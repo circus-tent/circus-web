@@ -3,7 +3,7 @@ DEFAULT_CONFIG = { width: 290, height: 79, delay: 10, dataSize: 25,
                              cpu: 'rgb(122, 185, 76)',
                              reads: 'rgb(203, 81, 58)' }};
 
-function hookGraph(socket, watcher, b64endpoint, metrics, prefix, capValues, config) {
+function hookGraph(socket, watcher, graph_id, metrics, prefix, capValues, config) {
     if (config == undefined) { config = DEFAULT_CONFIG; }
     if (metrics == undefined) { metrics = ['cpu', 'mem']; }
     if (prefix == undefined) { prefix = 'stats-'; }
@@ -15,7 +15,7 @@ function hookGraph(socket, watcher, b64endpoint, metrics, prefix, capValues, con
     });
 
     var graph = new Rickshaw.Graph({
-            element: document.getElementById(watcher + '_' + b64endpoint),
+            element: document.getElementById(graph_id),
             min: 0,
             max: 100,
             width: config.width,
@@ -65,9 +65,9 @@ function supervise(socket, watchers, watchersWithPids, b64endpoint, endpoint, st
     watchers.forEach(function(watcher) {
         // only the aggregation is sent here
         if (watcher == 'sockets') {
-            hookGraph(socket, 'socket-stats', b64endpoint, ['reads'], '', false, config);
+            hookGraph(socket, 'socket-stats', 'socket-stats' + '_' + b64endpoint, ['reads'], '', false, config);
         } else {
-            hookGraph(socket, watcher, b64endpoint, ['cpu', 'mem'], 'stats-', true, config);
+            hookGraph(socket, watcher, watcher + '_' + b64endpoint, ['cpu', 'mem'], 'stats-', true, config);
         }
     });
 
@@ -75,7 +75,7 @@ function supervise(socket, watchers, watchersWithPids, b64endpoint, endpoint, st
         if (watcher == 'sockets') {
             socket.on('socket-stats-fds', function(data) {
                 data.fds.forEach(function(fd) {
-                    hookGraph(socket, 'socket-stats-' + fd, b64endpoint, ['reads'],
+                    hookGraph(socket, 'socket-stats-' + fd, 'socket-stats-' + fd, ['reads'],
                               '', false, config);
                 });
             });
@@ -84,7 +84,7 @@ function supervise(socket, watchers, watchersWithPids, b64endpoint, endpoint, st
             socket.on('stats-' + watcher + '-pids', function(data) {
                 data.pids.forEach(function(pid) {
                     var id = watcher + '-' + pid;
-                    hookGraph(socket, id, b64endpoint, ['cpu', 'mem'], 'stats-', false,
+                    hookGraph(socket, id, id, ['cpu', 'mem'], 'stats-', false,
                               config);
                 });
             });
@@ -92,14 +92,15 @@ function supervise(socket, watchers, watchersWithPids, b64endpoint, endpoint, st
     });
 
     console.log({ watchers: watchers,
-                  watchersWithPids: watchersWithPids,
-                  stats_endpoint: stats_endpoint});
+                               watchersWithPids: watchersWithPids,
+                               endpoints: endpoint,
+                               stats_endpoints: stats_endpoint});
 
     // start the streaming of data, once the callbacks in place.
     socket.emit('get_stats', { watchers: watchers,
                                watchersWithPids: watchersWithPids,
-                               endpoint: endpoint,
-                               stats_endpoint: stats_endpoint});
+                               endpoints: endpoint,
+                               stats_endpoints: stats_endpoint});
 }
 
 $(document).ready(function() {

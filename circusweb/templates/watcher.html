@@ -157,7 +157,7 @@
 <script type="text/javascript">
     $(document).ready(function () {
         var socket = io.connect('${SERVER}');
-        supervise(socket, [], ['${name}'], ${b64encode(endpoint)}, ${dumps([endpoint])}, ${dumps([stats_endpoints[endpoint]])});
+        supervise(socket, [], ['${name}'], ${dumps([b64encode(endpoint)])}, ${dumps([endpoint])}, ${dumps([stats_endpoints[endpoint]])});
     });
 </script>
 

@@ -128,7 +128,6 @@ class Controller(object):
         raise gen.Return(client.sockets)
 
     def get_status(self, name, endpoint):
-        print "Clients", self.clients.keys(), locals()
         client = self.get_client(endpoint)
         res = client.send_message('status', name=name)
         return res['status']
