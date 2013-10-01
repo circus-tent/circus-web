@@ -1,6 +1,7 @@
 import tornadio2
 from tornado import gen
 from collections import defaultdict
+from base64 import b64encode
 
 
 class SocketIOConnection(tornadio2.SocketConnection):
@@ -47,16 +48,17 @@ class SocketIOConnection(tornadio2.SocketConnection):
             self.participants[endpoint].add(self)
 
     @classmethod
-    def consume_stats(cls, watcher, pid, stat, endpoint):
-        for p in cls.participants[endpoint]:
+    def consume_stats(cls, watcher, pid, stat, stat_endpoint):
+        stat_endpoint_b64 = b64encode(stat_endpoint)
+        for p in cls.participants[stat_endpoint]:
             if watcher == 'sockets':
                 # if we get information about sockets and we explicitely
                 # requested them, send back the information.
                 if 'sockets' in p.watchersWithPids and 'fd' in stat:
-                    p.emit('socket-stats-{fd}'.format(fd=stat['fd']),
+                    p.emit('socket-stats-{fd}-{endpoint}'.format(fd=stat['fd'], endpoint=stat_endpoint_b64),
                            **stat)
                 elif 'sockets' in p.watchers and 'addresses' in stat:
-                    p.emit('socket-stats', reads=stat['reads'],
+                    p.emit('socket-stats-{endpoint}'.format(endpoint=stat_endpoint_b64), reads=stat['reads'],
                            adresses=stat['addresses'])
             else:
                 available_watchers = p.watchers + p.watchersWithPids + \
@@ -66,19 +68,19 @@ class SocketIOConnection(tornadio2.SocketConnection):
                     if (watcher == 'circus'
                             and stat.get('name', None) in available_watchers):
                         p.emit(
-                            'stats-{watcher}'.format(watcher=stat['name']),
+                            'stats-{watcher}-{endpoint}'.format(watcher=stat['name'], endpoint=stat_endpoint_b64),
                             mem=stat['mem'], cpu=stat['cpu'], age=stat['age'])
                     else:
                         if pid is None:  # means that it's the aggregation
                             p.emit(
-                                'stats-{watcher}'.format(watcher=watcher),
+                                'stats-{watcher}-{endpoint}'.format(watcher=watcher, endpoint=stat_endpoint_b64),
                                 mem=stat['mem'], cpu=stat['cpu'],
                                 age=stat['age'])
                         else:
                             if watcher in p.watchersWithPids:
                                 p.emit(
-                                    'stats-{watcher}-{pid}'.format(
-                                        watcher=watcher, pid=pid),
+                                    'stats-{watcher}-{pid}-{endpoint}'.format(
+                                        watcher=watcher, pid=pid, endpoint=stat_endpoint_b64),
                                     mem=stat['mem'],
                                     cpu=stat['cpu'],
                                     age=stat['age'])

@@ -97,23 +97,24 @@ class BaseHandler(tornado.web.RequestHandler):
         namespace.update({'controller': get_controller(),
                           'version': __version__,
                           'b64encode': b64encode,
-                          'dumps': lambda x: json.dumps(list(x)),
+                          'dumps': json.dumps,
                           'session': self.session, 'messages': messages,
                           'SERVER': server})
 
         # Stats endpoints
         controller = get_controller()
+        endpoints = {}
         if self.session.endpoints and controller:
-            endpoints = self.session.endpoints
             stats_endpoints = {}
-            for endpoint in endpoints:
+            for endpoint in self.session.endpoints:
                 client = controller.get_client(endpoint)
                 if client and client.stats_endpoint:
-                    stats_endpoints[endpoint] = client.stats_endpoint
+                    endpoints[endpoint] = client.stats_endpoint
+                else:
+                    endpoints[endpoint] = None
             namespace.update({
-                'stats_endpoints': stats_endpoints,
                 'endpoints_list': app.auto_discovery.get_endpoints(),
-                'endpoints': self.session.endpoints})
+                'endpoints': endpoints})
 
         namespace.update(data)
 
@@ -168,7 +169,6 @@ class ConnectHandler(BaseHandler):
             raise StopIteration()
 
         for endpoint in endpoints:
-            print 'Connect', endpoint
             try:
                 yield gen.Task(connect_to_circus,
                                tornado.ioloop.IOLoop.instance(),
@@ -180,7 +180,6 @@ class ConnectHandler(BaseHandler):
                 if endpoint not in app.auto_discovery.get_endpoints():
                     app.auto_discovery.discovered_endpoints.add(endpoint)
                 self.session.endpoints.add(endpoint)
-        print endpoints_list, endpoints
         for endpoint in endpoints_list:
             if endpoint not in endpoints:
                 self.session.endpoints.remove(endpoint)

@@ -27,10 +27,10 @@
         </div>
 
         <div class="stat">
-            <div id="socket-stats-${socket['fd']}" class="graph"></div>
+            <div id="socket-stats-${socket['fd']}-${b64encode(endpoints[endpoint])}" class="graph"></div>
             <div class="metrics">
                 <span class="metric_label">Reads</span>
-                <span class="metric_value" id="socket-stats-${socket['fd']}_last_reads">0.0</span>
+                <span class="metric_value" id="socket-stats-${socket['fd']}-${b64encode(endpoints[endpoint])}_last_reads">0.0</span>
              </div>
         </div>
     </div>
@@ -40,7 +40,7 @@
 <script type="text/javascript">
     $(document).ready(function () {
         var socket = io.connect('${SERVER}');
-        supervise(socket, [], ['sockets'], ${dumps([b64encode(endpoint)])}, ${dumps([endpoint])}, ${dumps([stats_endpoints[endpoint]])});
+        supervise(socket, [], [['sockets', ${dumps(b64encode(endpoints[endpoint]))}]], ${dumps([endpoint])}, ${dumps([endpoints[endpoint]])});
     });
 </script>
 

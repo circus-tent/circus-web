@@ -34,14 +34,14 @@
         </div>
 
         <div class="stat">
-             <div id="${name}-${pid}" class="graph"></div>
+             <div id="${name}-${pid}-${b64encode(endpoints[endpoint])}" class="graph"></div>
              <div class="metrics cpu">
                 <span class="metric_label">CPU</span>
-                <span class="metric_value" id="${name}-${pid}_last_cpu">0.0 %</span>
+                <span class="metric_value" id="${name}-${pid}-${b64encode(endpoints[endpoint])}_last_cpu">0.0 %</span>
              </div>
              <div class="metrics mem">
                 <span class="metric_label">Mem</span>
-                <span class="metric_value" id="${name}-${pid}_last_mem">0.0 %</span>
+                <span class="metric_value" id="${name}-${pid}-${b64encode(endpoints[endpoint])}_last_mem">0.0 %</span>
              </div>
         </div>
     </div>
@@ -157,7 +157,7 @@
 <script type="text/javascript">
     $(document).ready(function () {
         var socket = io.connect('${SERVER}');
-        supervise(socket, [], ['${name}'], ${dumps([b64encode(endpoint)])}, ${dumps([endpoint])}, ${dumps([stats_endpoints[endpoint]])});
+        supervise(socket, [], [['${name}', ${dumps(b64encode(endpoints[endpoint]))}]], ${dumps([endpoint])}, ${dumps([endpoints[endpoint]])});
     });
 </script>
 

@@ -29,7 +29,7 @@ function hookGraph(socket, watcher, graph_id, metrics, prefix, capValues, config
                   timeBase: new Date().getTime() / 1000 })
     });
 
-    socket.on(prefix + watcher, function(received) {
+    socket.on(prefix + graph_id, function(received) {
         var data = {};
 
         // cap to 100
@@ -43,7 +43,9 @@ function hookGraph(socket, watcher, graph_id, metrics, prefix, capValues, config
             var value = data[metric].toFixed(1);
             if (metric != 'reads') { value += '%'; }
 
-            $('#' + watcher + '_last_' + metric).text(value);
+            // JQuery seems to doesn't like base 64
+            text_dom = document.getElementById(graph_id +  '_last_' + metric);
+            $(text_dom).text(value);
         });
 
 	if(received.hasOwnProperty("age")){
@@ -57,25 +59,38 @@ function hookGraph(socket, watcher, graph_id, metrics, prefix, capValues, config
 }
 
 
-function supervise(socket, watchers, watchersWithPids, b64endpoint, endpoint, stats_endpoint, config) {
+function supervise(socket, watchers, watchersWithPids, endpoints, stats_endpoints, config) {
 
     if (watchersWithPids == undefined) { watchersWithPids = []; }
     if (config == undefined) { config = DEFAULT_CONFIG; }
 
-    watchers.forEach(function(watcher) {
+    watchers_to_send = [];
+
+    watchers.forEach(function(watcher_tuple) {
+        watcher = watcher_tuple[0];
+        watcher_endpoint = watcher_tuple[1];
+
         // only the aggregation is sent here
         if (watcher == 'sockets') {
-            hookGraph(socket, 'socket-stats', 'socket-stats' + '_' + b64endpoint, ['reads'], '', false, config);
+            hookGraph(socket, 'socket-stats', 'socket-stats' + '-' + watcher_endpoint, ['reads'], '', false, config);
         } else {
-            hookGraph(socket, watcher, watcher + '_' + b64endpoint, ['cpu', 'mem'], 'stats-', true, config);
+            hookGraph(socket, watcher, watcher + '-' + watcher_endpoint, ['cpu', 'mem'], 'stats-', true, config);
         }
+
+        watchers_to_send.push(watcher);
     });
 
-    watchersWithPids.forEach(function(watcher) {
+    watchers_with_pid_to_send = [];
+
+    watchersWithPids.forEach(function(watcher_tuple) {
+        watcher = watcher_tuple[0];
+        watcher_endpoint = watcher_tuple[1];
         if (watcher == 'sockets') {
             socket.on('socket-stats-fds', function(data) {
                 data.fds.forEach(function(fd) {
-                    hookGraph(socket, 'socket-stats-' + fd, 'socket-stats-' + fd, ['reads'],
+                    var id = 'socket-stats-' + fd;
+                    var graph_id = 'socket-stats-' + fd + '-' + watcher_endpoint;
+                    hookGraph(socket, id, graph_id, ['reads'],
                               '', false, config);
                 });
             });
@@ -84,23 +99,21 @@ function supervise(socket, watchers, watchersWithPids, b64endpoint, endpoint, st
             socket.on('stats-' + watcher + '-pids', function(data) {
                 data.pids.forEach(function(pid) {
                     var id = watcher + '-' + pid;
-                    hookGraph(socket, id, id, ['cpu', 'mem'], 'stats-', false,
+                    var graph_id = watcher + '-' + pid + '-' + watcher_endpoint;
+                    hookGraph(socket, id, graph_id, ['cpu', 'mem'], 'stats-', false,
                               config);
                 });
             });
         }
+
+        watchers_with_pid_to_send.push(watcher);
     });
 
-    console.log({ watchers: watchers,
-                               watchersWithPids: watchersWithPids,
-                               endpoints: endpoint,
-                               stats_endpoints: stats_endpoint});
-
     // start the streaming of data, once the callbacks in place.
-    socket.emit('get_stats', { watchers: watchers,
-                               watchersWithPids: watchersWithPids,
-                               endpoints: endpoint,
-                               stats_endpoints: stats_endpoint});
+    socket.emit('get_stats', { watchers: watchers_to_send,
+                               watchersWithPids: watchers_with_pid_to_send,
+                               endpoints: endpoints,
+                               stats_endpoints: stats_endpoints});
 }
 
 $(document).ready(function() {
