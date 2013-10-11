@@ -1,7 +1,9 @@
 <%inherit file="base.html"/>
+<% import socket %>
+<% hostname = socket.gethostname() %>
 
 <div class="title">
-    <div style="float: left;" class="watcher_name">Watchers</div>
+    <div style="float: left;" class="watcher_name">Watchers: ${hostname}</div>
 
     <div class="graph_home">
         <span id="circusd" class="sparklines"></span>
