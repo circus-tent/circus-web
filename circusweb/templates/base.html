@@ -85,8 +85,8 @@
 			  <form action="${reverse_url('connect')}" method="post" id="endpoints_list">
 				<ul>
                   % for endpoint in endpoints_list:
-				  <li><label><input type="checkbox" name="endpoint" value="${endpoint}"
-% if endpoint in endpoints: 
+				  <li><label><input type="checkbox" name="endpoint_list" value="${endpoint}"
+% if endpoint in endpoints:
 checked="checked"
 % endif
 /> ${endpoint}</label></li>

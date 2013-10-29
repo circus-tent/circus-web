@@ -3,10 +3,10 @@
 <h1>Connect to a Circus system</h1>
 <p id="countdown">Autoconnect in <strong id="countdown-value"></strong>s</p>
 <form id='connector' action="${reverse_url('connect')}" method="POST">
-<input id="endpoint" type="text" name="endpoint" value="tcp://127.0.0.1:5555"/>
+<input id="endpoint" type="text" name="endpoint_direct" value="tcp://127.0.0.1:5555"/>
 % if endpoints:
     <p>OR</p>
-    <select name="endpoint" multiple="multiple">
+    <select name="endpoint_list" multiple="multiple">
     % for endpoint in endpoints:
         <option value="${endpoint}">${endpoint}</option>
     % endfor
