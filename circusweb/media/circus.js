@@ -67,7 +67,7 @@ function supervise(socket, watchers, watchersWithPids, endpoints, stats_endpoint
         if (watcher == 'sockets') {
             hookGraph(socket, 'socket-stats', ['reads'], '', false, config);
         } else {
-            hookGraph(socket, watcher, ['cpu', 'mem'], 'stats-', true, config);
+            hookGraph(socket, watcher, watcher + '-' + watcher_endpoint, ['cpu', 'mem', 'num_fds'], 'stats-', true, config);
         }
     });
 

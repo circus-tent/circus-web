@@ -43,6 +43,10 @@
                 <span class="metric_label">Mem</span>
                 <span class="metric_value" id="${name}-${pid}_last_mem">0.0 %</span>
              </div>
+             <div class="metrics fd">
+                <span class="metric_label">FD</span>
+                <span class="metric_value" id="${name}-${pid}-${b64encode(endpoints[endpoint])}_last_num_fds">0 %</span>
+             </div>
         </div>
     </div>
     %endfor
