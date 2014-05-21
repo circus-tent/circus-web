@@ -111,13 +111,12 @@ class Controller(object):
         return res
 
     @gen.coroutine
-    def get_pids(self, name, endpoints):
+    def get_pids(self, name, endpoint):
         tasks = []
-        for endpoint in endpoints:
-            client = self.get_client(endpoint)
-            tasks.append(gen.Task(client.send_message, 'list', name=name))
-        res = yield tasks
-        raise gen.Return(chain.from_iterable(r['pids'] for r in res))
+        client = self.get_client(endpoint)
+        res = yield gen.Task(client.send_message, 'list', name=name)
+        print "Res", res
+        raise gen.Return(res['pids'])
 
     @gen.coroutine
     def get_sockets(self, endpoint, force_reload=False):

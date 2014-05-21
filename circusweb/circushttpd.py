@@ -143,9 +143,7 @@ class IndexHandler(BaseHandler):
     @gen.coroutine
     def get(self):
         controller = get_controller()
-        endpoints = self.session.endpoints
-        goptions = yield gen.Task(controller.get_global_options, sorted(list(endpoints))[0])
-        self.finish(self.render_template('index.html', goptions=goptions))
+        self.finish(self.render_template('index.html', controller=controller))
 
 
 class ConnectHandler(BaseHandler):
@@ -225,7 +223,7 @@ class WatcherHandler(BaseHandler):
     def get(self, endpoint, name):
         controller = get_controller()
         endpoint = b64decode(endpoint)
-        pids = yield gen.Task(controller.get_pids, name, [endpoint])
+        pids = yield gen.Task(controller.get_pids, name, endpoint)
         self.finish(self.render_template('watcher.html', pids=pids, name=name,
                                          endpoint=endpoint))
 
@@ -257,7 +255,7 @@ class KillProcessHandler(BaseHandler):
                                  pid=pid),
                              endpoint=b64decode(endpoint),
                              args=(name, pid),
-                             redirect_url=self.reverse_url('watcher', name))
+                             redirect_url=self.reverse_url('watcher', endpoint, name))
         self.redirect(url)
 
 
@@ -272,7 +270,7 @@ class DecrProcHandler(BaseHandler):
                              message=msg.format(watcher=name),
                              endpoint=b64decode(endpoint),
                              args=(name,),
-                             redirect_url=self.reverse_url('watcher', name))
+                             redirect_url=self.reverse_url('watcher', endpoint, name))
         self.redirect(url)
 
 
@@ -287,7 +285,7 @@ class IncrProcHandler(BaseHandler):
                              message=msg.format(watcher=name),
                              endpoint=b64decode(endpoint),
                              args=(name,),
-                             redirect_url=self.reverse_url('watcher', name))
+                             redirect_url=self.reverse_url('watcher', endpoint, name))
         self.redirect(url)
 
 
@@ -296,12 +294,26 @@ class SocketsHandler(BaseHandler):
     @require_logged_user
     @tornado.web.asynchronous
     @gen.coroutine
-    def get(self):
+    def get(self, endpoint = None):
         controller = get_controller()
-        endpoints = self.session.endpoints
-        sockets = yield gen.Task(controller.get_sockets, endpoints=endpoints)
+        sockets = {}
+
+        if endpoint:
+            endpoint = b64decode(endpoint)
+            sockets[endpoint] = yield gen.Task(controller.get_sockets,
+                                               endpoint=endpoint)
+        else:
+            for endpoint in self.session.endpoints:
+                # Ignore endpoints which doesn't uses sockets
+                if controller.get_client(endpoint).use_sockets:
+                    sockets[endpoint] = yield gen.Task(controller.get_sockets,
+                                                       endpoint=endpoint)
+
+
         self.finish(
-            self.render_template('sockets.html', sockets=sockets))
+            self.render_template('sockets.html', sockets=sockets,
+                                 controller=controller,
+                                 endpoints=self.session.endpoints))
 
 
 class Application(tornado.web.Application):
@@ -327,6 +339,8 @@ class Application(tornado.web.Application):
             URLSpec(r'/([^/]+)/watcher/([^/]+)/process/incr/',
                     IncrProcHandler, name="incr_proc"),
             URLSpec(r'/sockets/',
+                    SocketsHandler, name="all_sockets"),
+            URLSpec(r'/([^/]+)/sockets/',
                     SocketsHandler, name="sockets"),
         ]
 

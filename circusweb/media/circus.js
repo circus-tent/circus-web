@@ -48,10 +48,11 @@ function hookGraph(socket, watcher, graph_id, metrics, prefix, capValues, config
             $(text_dom).text(value);
         });
 
-	if(received.hasOwnProperty("age")){
-	    var val =  '(' + Math.round(received['age']) + 's)';
-            $('#' + watcher + '_last_age').text(val);
-	}
+        if(received.hasOwnProperty("age")){
+            var val =  '(' + Math.round(received['age']) + 's)';
+            var node = document.getElementById(graph_id + '_last_age');
+            node.innerHTML = val;
+        }
 
         graph.series.addData(data);
         graph.render();
@@ -83,30 +84,34 @@ function supervise(socket, watchers, watchersWithPids, endpoints, stats_endpoint
     watchers_with_pid_to_send = [];
 
     watchersWithPids.forEach(function(watcher_tuple) {
-        watcher = watcher_tuple[0];
-        watcher_endpoint = watcher_tuple[1];
+        var watcher = watcher_tuple[0];
+        var watcher_stats_endpoint = watcher_tuple[1];
+        var watcher_endpoint = watcher_tuple[2];
         if (watcher == 'sockets') {
-            socket.on('socket-stats-fds', function(data) {
+            socket.on('socket-stats-fds-' + watcher_endpoint, function(data) {
                 data.fds.forEach(function(fd) {
                     var id = 'socket-stats-' + fd;
-                    var graph_id = 'socket-stats-' + fd + '-' + watcher_endpoint;
+                    var graph_id = 'socket-stats-' + fd + '-' + watcher_stats_endpoint;
                     hookGraph(socket, id, graph_id, ['reads'],
                               '', false, config);
                 });
             });
         } else {
             // get the list of processes for this watcher from the server
-            socket.on('stats-' + watcher + '-pids', function(data) {
+            socket.on('stats-' + watcher + '-pids-' + watcher_endpoint, function(data) {
                 data.pids.forEach(function(pid) {
                     var id = watcher + '-' + pid;
-                    var graph_id = watcher + '-' + pid + '-' + watcher_endpoint;
+                    var graph_id = watcher + '-' + pid + '-' + watcher_stats_endpoint;
                     hookGraph(socket, id, graph_id, ['cpu', 'mem'], 'stats-', false,
                               config);
                 });
             });
         }
 
-        watchers_with_pid_to_send.push(watcher);
+        tuple = [];
+        tuple.push(watcher);
+        tuple.push(watcher_endpoint);
+        watchers_with_pid_to_send.push(tuple);
     });
 
     // start the streaming of data, once the callbacks in place.

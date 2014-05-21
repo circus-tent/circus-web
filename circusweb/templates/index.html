@@ -62,7 +62,7 @@
     <div class="process" style="margin-bottom: 15px">
         <div>
             <span style="display: inline-block; float: left;" class="label">${name or watcher}</span>
-	        <span class="age-stat" id="${watcher}_last_age"></span>
+	        <span class="age-stat" id="${watcher}-${b64encode(endpoint)}_last_age"></span>
 
             %if display_status:
             <div style="width: 20px; float: right; margin-right: 10px;"><a class="${controller.get_status(watcher, endpoint)}" title="${controller.get_status(watcher, endpoint)}" href="${reverse_url('switch_status', endpoint, name=watcher)}"></a></div>
@@ -105,8 +105,8 @@
      ${draw_graph_div(plugin, plugin.split(':')[1].replace('-', '.'), True, endpoint=stat_endpoint)}
  %endfor
 
+    <div style="clear:both"></div>
 </div>
-<div style="clear:both"></div>
 
 <div class="title">
    <div class="watcher_name">Options</div>
@@ -119,7 +119,7 @@
             <i>circushttpd</i>
         </td>
         <td>
-            <span class="label">${goptions.get('endpoint', 'N/A')}</span>
+            <span class="label">${endpoint}</span>
         </td>
     </tr>
     <tr>
@@ -127,7 +127,7 @@
             ZeroMQ endpoint used for pub/sub
         </td>
         <td>
-            <span class="label">${goptions.get('pubsub_endpoint', 'N/A')}</span>
+            <span class="label">${controller.get_client(endpoint).pubsub_endpoint}</span>
         </td>
     </tr>
     <tr>
@@ -135,7 +135,7 @@
             ZeroMQ endpoint used for the pub/sub stats
         </td>
         <td>
-            <span class="label">${endpoints.get(endpoint, 'N/A')}</span>
+            <span class="label">${controller.get_client(endpoint).stats_endpoint}</span>
         </td>
     </tr>
 
@@ -144,7 +144,7 @@
             Delay in seconds for the ZMQ polling.
         </td>
         <td>
-            <span class="label">${goptions.get('check_delay', 'N/A')}</span>
+            <span class="label">${controller.get_client(endpoint).check_delay}</span>
         </td>
     </tr>
 

@@ -1,7 +1,7 @@
 import tornadio2
 from tornado import gen
 from collections import defaultdict
-from base64 import b64encode
+from base64 import b64encode, b64decode
 
 
 class SocketIOConnection(tornadio2.SocketConnection):
@@ -26,21 +26,24 @@ class SocketIOConnection(tornadio2.SocketConnection):
         from circusweb.session import get_controller  # Circular import
         controller = get_controller()
 
-        for watcher in watchersWithPids:
+        for watcher_tuple in watchersWithPids:
+            watcher, encoded_endpoint = watcher_tuple
+            endpoint = b64decode(encoded_endpoint)
             if watcher == "sockets":
                 sockets = yield gen.Task(controller.get_sockets,
-                                         endpoint=endpoints[0])
+                                         endpoint=endpoint)
                 fds = [s['fd'] for s in sockets]
-                self.emit('socket-stats-fds', fds=fds)
+                self.emit('socket-stats-fds-{endpoint}'.format(endpoint=encoded_endpoint), fds=fds)
             else:
-                pids = yield gen.Task(controller.get_pids, watcher, endpoints)
+                pids = yield gen.Task(controller.get_pids, watcher, endpoint)
                 pids = [int(pid) for pid in pids]
-                channel = 'stats-{watcher}-pids'.format(watcher=watcher)
+                channel = 'stats-{watcher}-pids-{endpoint}'.format(watcher=watcher, endpoint=encoded_endpoint)
                 self.emit(channel, pids=pids)
 
         self.watchers = watchers
 
-        self.watchersWithPids = watchersWithPids
+        # Dirty fix
+        self.watchersWithPids = [x[0] for x in watchersWithPids]
         self.stats_endpoints = stats_endpoints
 
         for endpoint in stats_endpoints:
