@@ -1,6 +1,15 @@
 CHANGES
 =======
 
+0.5 (2014-05-21)
+----------------
+
+* Make circus-web able to manage multiple endpoints at once
+* Make a page to monitor all sockets
+* Be able to enter a manual endpoint to monitor
+* Be able to select which endpoint to monitor
+
+
 0.4.1 - 2013-05-29
 ------------------
 
