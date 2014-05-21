@@ -115,7 +115,6 @@ class Controller(object):
         tasks = []
         client = self.get_client(endpoint)
         res = yield gen.Task(client.send_message, 'list', name=name)
-        print "Res", res
         raise gen.Return(res['pids'])
 
     @gen.coroutine

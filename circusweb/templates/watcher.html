@@ -24,7 +24,7 @@
     %for pid in pids:
     <div class="process">
         <div>
-            <span style="display: inline-block; float: left;" class="label">Process #${pid}</span><span id="${name}-${pid}-${b64encode(endpoint)}_last_age" class="age-stat"></span>
+            <span style="display: inline-block; float: left;" class="label">Process #${pid}</span><span id="${name}-${pid}-${b64encode(endpoints[endpoint])}_last_age" class="age-stat"></span>
 
             <span style="display: inline-block; float: right;">
                 <a href="${reverse_url('kill_process', b64encode(endpoint), name, pid)}" title="Kill">
