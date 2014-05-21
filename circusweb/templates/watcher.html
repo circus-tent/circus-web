@@ -1,7 +1,7 @@
 <%inherit file="base.html"/>
 
 % if controller:
-    <div class="title">
+    <div class="title" style="background-color: #D6D6FF;">
      <div class="watcher_name">${endpoint} Watcher <strong>${name}</strong>
       <a style="display:inline-block;" class="${controller.get_status(name, endpoint)}"
          title="${controller.get_status(name, endpoint)}" href="${reverse_url('switch_status', b64encode(endpoint), name)}?redirect=${reverse_url('watcher', b64encode(endpoint), name)}"></a></div>
