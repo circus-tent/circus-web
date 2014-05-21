@@ -16,8 +16,8 @@ try:
     import tornado.web
 
     from tornado import gen
-    from tornado.escape import json_decode, json_encode
-    from tornado.options import define, options
+    from tornado.escape import json_decode, json_encode  # NOQA
+    from tornado.options import define, options  # NOQA
     from tornado.web import URLSpec
 
     import tornadio2
@@ -103,15 +103,17 @@ class BaseHandler(tornado.web.RequestHandler):
 
         # Stats endpoints
         controller = get_controller()
+        endpoints = {}
         if self.session.endpoints and controller:
-            endpoints = self.session.endpoints
-            stats_endpoints = []
-            for endpoint in endpoints:
+            for endpoint in self.session.endpoints:
                 client = controller.get_client(endpoint)
                 if client and client.stats_endpoint:
-                    stats_endpoints.append(client.stats_endpoint)
-            namespace.update({'stats_endpoints': stats_endpoints,
-                              'endpoints': self.session.endpoints})
+                    endpoints[endpoint] = client.stats_endpoint
+                else:
+                    endpoints[endpoint] = None
+            namespace.update({
+                'endpoints_list': app.auto_discovery.get_endpoints(),
+                'endpoints': endpoints})
 
         namespace.update(data)
 
@@ -125,7 +127,7 @@ class BaseHandler(tornado.web.RequestHandler):
         """Disconnect the endpoint the user was logged on + Remove cookies."""
         for endpoint in self.session.endpoints:
             disconnect_from_circus(endpoint)
-        self.session.endpoints = []
+        self.session.endpoints = set()
 
     def run_command(self, *args, **kwargs):
         """Run a command in a gen.Task, include current session"""
@@ -140,9 +142,7 @@ class IndexHandler(BaseHandler):
     @gen.coroutine
     def get(self):
         controller = get_controller()
-        endpoints = self.session.endpoints
-        goptions = yield gen.Task(controller.get_global_options, endpoints[0])
-        self.finish(self.render_template('index.html', goptions=goptions))
+        self.finish(self.render_template('index.html', controller=controller))
 
 
 class ConnectHandler(BaseHandler):
@@ -158,24 +158,34 @@ class ConnectHandler(BaseHandler):
     @tornado.web.asynchronous
     @gen.coroutine
     def post(self):
-        endpoint = self.get_argument('endpoint', None)
+        endpoints_list = list(self.session.endpoints)
+        endpoints = self.get_arguments('endpoint_list', [])
 
-        if not endpoint:
-            self.finish(self.show_form())
+        # If no selection in list
+        if not endpoints:
+            endpoints = self.get_arguments('endpoint_direct', [])
 
-        endpoint_select = self.get_argument('endpoint_select', None)
-        if endpoint_select:
-            endpoint = endpoint_select
+        if not endpoints:
+            self.redirect(self.reverse_url('disconnect'))
+            raise StopIteration()
 
-        try:
-            yield gen.Task(connect_to_circus, tornado.ioloop.IOLoop.instance(),
-                           endpoint)
-        except CallError:
-            self.session.messages.append("Impossible to connect")
-            self.redirect(self.reverse_url('connect'))
-        else:
-            self.session.endpoints.append(endpoint)
-            self.redirect(self.reverse_url('index'))
+        for endpoint in endpoints:
+            try:
+                yield gen.Task(connect_to_circus,
+                               tornado.ioloop.IOLoop.instance(),
+                               endpoint)
+            except CallError:
+                self.session.messages.append("Impossible to connect to %s" %
+                                             endpoint)
+            else:
+                if endpoint not in app.auto_discovery.get_endpoints():
+                    app.auto_discovery.discovered_endpoints.add(endpoint)
+                self.session.endpoints.add(endpoint)
+        for endpoint in endpoints_list:
+            if endpoint not in endpoints:
+                self.session.endpoints.remove(endpoint)
+
+        self.redirect(self.reverse_url('index'))
 
 
 class DisconnectHandler(BaseHandler):
@@ -209,11 +219,12 @@ class WatcherHandler(BaseHandler):
     @require_logged_user
     @tornado.web.asynchronous
     @gen.coroutine
-    def get(self, name):
+    def get(self, endpoint, name):
         controller = get_controller()
-        endpoints = self.session.endpoints
-        pids = yield gen.Task(controller.get_pids, name, endpoints)
-        self.finish(self.render_template('watcher.html', pids=pids, name=name))
+        endpoint = b64decode(endpoint)
+        pids = yield gen.Task(controller.get_pids, name, endpoint)
+        self.finish(self.render_template('watcher.html', pids=pids, name=name,
+                                         endpoint=endpoint))
 
 
 class WatcherSwitchStatusHandler(BaseHandler):
@@ -223,10 +234,10 @@ class WatcherSwitchStatusHandler(BaseHandler):
     @gen.coroutine
     def get(self, endpoint, name):
         url = yield self.run_command(command='switch_status',
-                             message='status switched',
-                             endpoint=b64decode(endpoint),
-                             args=(name,),
-                             redirect_url=self.reverse_url('index'))
+                                     message='status switched',
+                                     endpoint=b64decode(endpoint),
+                                     args=(name,),
+                                     redirect_url=self.reverse_url('index'))
         self.redirect(url)
 
 
@@ -238,12 +249,11 @@ class KillProcessHandler(BaseHandler):
     def get(self, endpoint, name, pid):
         msg = 'process {pid} killed sucessfully'
         url = yield self.run_command(
-                             command='killproc',
-                             message=msg.format(
-                                 pid=pid),
-                             endpoint=b64decode(endpoint),
-                             args=(name, pid),
-                             redirect_url=self.reverse_url('watcher', name))
+            command='killproc',
+            message=msg.format(pid=pid),
+            endpoint=b64decode(endpoint),
+            args=(name, pid),
+            redirect_url=self.reverse_url('watcher', endpoint, name))
         self.redirect(url)
 
 
@@ -255,10 +265,12 @@ class DecrProcHandler(BaseHandler):
     def get(self, endpoint, name):
         msg = 'removed one process from the {watcher} pool'
         url = yield self.run_command(command='decrproc',
-                             message=msg.format(watcher=name),
-                             endpoint=b64decode(endpoint),
-                             args=(name,),
-                             redirect_url=self.reverse_url('watcher', name))
+                                     message=msg.format(watcher=name),
+                                     endpoint=b64decode(endpoint),
+                                     args=(name,),
+                                     redirect_url=self.reverse_url('watcher',
+                                                                   endpoint,
+                                                                   name))
         self.redirect(url)
 
 
@@ -270,10 +282,12 @@ class IncrProcHandler(BaseHandler):
     def get(self, endpoint, name):
         msg = 'added one process to the {watcher} pool'
         url = yield self.run_command(command='incrproc',
-                             message=msg.format(watcher=name),
-                             endpoint=b64decode(endpoint),
-                             args=(name,),
-                             redirect_url=self.reverse_url('watcher', name))
+                                     message=msg.format(watcher=name),
+                                     endpoint=b64decode(endpoint),
+                                     args=(name,),
+                                     redirect_url=self.reverse_url('watcher',
+                                                                   endpoint,
+                                                                   name))
         self.redirect(url)
 
 
@@ -282,12 +296,25 @@ class SocketsHandler(BaseHandler):
     @require_logged_user
     @tornado.web.asynchronous
     @gen.coroutine
-    def get(self):
+    def get(self, endpoint=None):
         controller = get_controller()
-        endpoints = self.session.endpoints
-        sockets = yield gen.Task(controller.get_sockets, endpoint=endpoints[0])
+        sockets = {}
+
+        if endpoint:
+            endpoint = b64decode(endpoint)
+            sockets[endpoint] = yield gen.Task(controller.get_sockets,
+                                               endpoint=endpoint)
+        else:
+            for endpoint in self.session.endpoints:
+                # Ignore endpoints which doesn't uses sockets
+                if controller.get_client(endpoint).use_sockets:
+                    sockets[endpoint] = yield gen.Task(controller.get_sockets,
+                                                       endpoint=endpoint)
+
         self.finish(
-            self.render_template('sockets.html', sockets=sockets))
+            self.render_template('sockets.html', sockets=sockets,
+                                 controller=controller,
+                                 endpoints=self.session.endpoints))
 
 
 class Application(tornado.web.Application):
@@ -300,10 +327,10 @@ class Application(tornado.web.Application):
                     ConnectHandler, name="connect"),
             URLSpec(r'/disconnect/',
                     DisconnectHandler, name="disconnect"),
-            URLSpec(r'/watcher/([^/]+)/',
-                    WatcherHandler, name="watcher"),
             URLSpec(r'/([^/]+)/add_watcher/',
                     WatcherAddHandler, name="add_watcher"),
+            URLSpec(r'/([^/]+)/watcher/([^/]+)/',
+                    WatcherHandler, name="watcher"),
             URLSpec(r'/([^/]+)/watcher/([^/]+)/switch_status/',
                     WatcherSwitchStatusHandler, name="switch_status"),
             URLSpec(r'/([^/]+)/watcher/([^/]+)/process/kill/([^/]+)/',
@@ -313,6 +340,8 @@ class Application(tornado.web.Application):
             URLSpec(r'/([^/]+)/watcher/([^/]+)/process/incr/',
                     IncrProcHandler, name="incr_proc"),
             URLSpec(r'/sockets/',
+                    SocketsHandler, name="all_sockets"),
+            URLSpec(r'/([^/]+)/sockets/',
                     SocketsHandler, name="sockets"),
         ]
 

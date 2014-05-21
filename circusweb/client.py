@@ -34,6 +34,8 @@ class AsynchronousCircusClient(CircusClient):
 
         # Infos
         self.stats_endpoint = None
+        self.pubsub_endpoint = None
+        self.check_delay = None
         self.connected = False
         self.watchers = []
         self.plugins = []
@@ -123,12 +125,25 @@ class AsynchronousCircusClient(CircusClient):
 
             self.watchers.sort()
             global_options = yield gen.Task(self.get_global_options)
+
+            self.check_delay = global_options['check_delay']
+
+            # Stats endpoints
             self.stats_endpoint = global_options['stats_endpoint']
             if self.endpoint.startswith('tcp://'):
                 # In case of multi interface binding i.e: tcp://0.0.0.0:5557
                 anyaddr = '0.0.0.0'
                 ip = self.endpoint.lstrip('tcp://').split(':')[0]
                 self.stats_endpoint = self.stats_endpoint.replace(anyaddr, ip)
+
+            # Pub Sub endpoints
+            self.pubsub_endpoint = global_options['pubsub_endpoint']
+            if self.endpoint.startswith('tcp://'):
+                # In case of multi interface binding i.e: tcp://0.0.0.0:5557
+                anyaddr = '0.0.0.0'
+                ip = self.endpoint.lstrip('tcp://').split(':')[0]
+                self.pubsub_endpoint = self.pubsub_endpoint.replace(
+                    anyaddr, ip)
         except CallError:
             self.connected = False
             raise

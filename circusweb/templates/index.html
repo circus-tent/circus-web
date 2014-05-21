@@ -1,7 +1,9 @@
 <%inherit file="base.html"/>
 
-<div class="title">
-    <div style="float: left;" class="watcher_name">Watchers</div>
+% for endpoint, stat_endpoint in endpoints.items():
+<div class="title" style="background-color: #D6D6FF;">
+    <div style="float: left;" class="watcher_name">${endpoint} Watchers</div>
+    <div style="float: right;"><a href="#" class="add_watcher" data-add-url="${reverse_url('add_watcher', b64encode(endpoint))}">Add Watcher</a></div>
 
     <div class="graph_home">
         <span id="circusd" class="sparklines"></span>
@@ -19,19 +21,19 @@
         <div style="width: 50px;">gid</div>
         <div style="width: 50px;">Status</div>
     </div>
-% for watcher, options in controller.get_client(endpoints[0]).watchers:
-    % if watcher not in controller.get_client(endpoints[0]).plugins:
-    <div class="watcher">
-        <div style="width: 300px;"><a class="link" href="${reverse_url('watcher', watcher)}">${watcher}</a></div>
-        <div style="width: 80px;">${options['numprocesses']}</div>
-        <div style="width: 342px;">${options['cmd']} ${options['args']}</div>
-        <div style="width: 50px;">${options['shell']}</div>
-        <div style="width: 50px;">${options['uid']}</div>
-        <div style="width: 50px;">${options['gid']}</div>
-        <div style="width: 50px;"><a class="${controller.get_status(watcher, endpoints[0])}" title="${controller.get_status(watcher, endpoints[0])}" href="${reverse_url('switch_status', b64encode(endpoints[0]), watcher)}"></a></div>
-    </div>
-    %endif
-%endfor
+    % for watcher, options in controller.get_client(endpoint).watchers:
+        % if watcher not in controller.get_client(endpoint).plugins:
+        <div class="watcher">
+            <div style="width: 300px;"><a class="link" href="${reverse_url('watcher', b64encode(endpoint), watcher)}">${watcher}</a></div>
+            <div style="width: 80px;">${options['numprocesses']}</div>
+            <div style="width: 342px;">${options['cmd']} ${options['args']}</div>
+            <div style="width: 50px;">${options['shell']}</div>
+            <div style="width: 50px;">${options['uid']}</div>
+            <div style="width: 50px;">${options['gid']}</div>
+            <div style="width: 50px;"><a class="${controller.get_status(watcher, endpoint)}" title="${controller.get_status(watcher, endpoint)}" href="${reverse_url('switch_status', b64encode(endpoint), watcher)}"></a></div>
+        </div>
+        % endif
+    % endfor
 </div>
 
 <div class="title">
@@ -47,7 +49,7 @@
         <span class="legend_indicator"></span>
         <span class="">Memory</span>
     </div>
-    %if controller.get_client(endpoints[0]).use_sockets:
+    %if controller.get_client(endpoint).use_sockets:
     <div class="legend_reads">
         <span class="legend_indicator"></span>
         <span class="">Socket reads</span>
@@ -56,56 +58,55 @@
 </div>
 
 <div>
-    <%def name='draw_graph_div(watcher, name=None, display_status=False, socket=False)'>
+    <%def name='draw_graph_div(watcher, name=None, display_status=False, socket=False, endpoint=None)'>
+    <div class="process" style="margin-bottom: 15px">
+        <div>
+            <span style="display: inline-block; float: left;" class="label">${name or watcher}</span>
+	        <span class="age-stat" id="${watcher}-${b64encode(endpoint)}_last_age"></span>
 
-   <div class="process" style="margin-bottom: 15px">
-    <div>
-        <span style="display: inline-block; float: left;" class="label">${name or watcher}</span>
-	<span class="age-stat" id="${watcher}_last_age"></span>
+            %if display_status:
+            <div style="width: 20px; float: right; margin-right: 10px;"><a class="${controller.get_status(watcher, endpoint)}" title="${controller.get_status(watcher, endpoint)}" href="${reverse_url('switch_status', endpoint, name=watcher)}"></a></div>
+            %endif
+        </div>
 
-        %if display_status:
-        <div style="width: 20px; float: right; margin-right: 10px;"><a class="${controller.get_status(watcher, endpoints[0])}" title="${controller.get_status(watcher, endpoints[0])}" href="${reverse_url('switch_status', endpoints[0], watcher)}"></a></div>
-        %endif
+        <div class="stat">
+            <div id="${watcher}-${b64encode(endpoint)}" class="graph"></div>
+            %if socket:
+            <div class="metrics" >
+                <span class="metric_label">Reads</span>
+                <span class="metric_value" id="${watcher}-${b64encode(endpoint)}_last_reads">0</span>
+            </div>
+            %else:
+            <div class="metrics cpu">
+                <span class="metric_label">CPU</span>
+                <span class="metric_value" id="${watcher}-${b64encode(endpoint)}_last_cpu">0 %</span>
+            </div>
+            <div class="metrics mem">
+                <span class="metric_label">Mem</span>
+                <span class="metric_value" id="${watcher}-${b64encode(endpoint)}_last_mem">0 %</span>
+            </div>
+            %endif
+        </div>
     </div>
+    </%def>
 
-    <div class="stat">
-        <div id="${watcher}" class="graph"></div>
-        %if socket:
-         <div class="metrics" >
-            <span class="metric_label">Reads</span>
-            <span class="metric_value" id="${watcher}_last_reads">0</span>
-         </div>
-        %else:
-        <div class="metrics cpu">
-            <span class="metric_label">CPU</span>
-            <span class="metric_value" id="${watcher}_last_cpu">0 %</span>
-         </div>
-         <div class="metrics mem">
-            <span class="metric_label">Mem</span>
-            <span class="metric_value" id="${watcher}_last_mem">0 %</span>
-         </div>
-        %endif
-    </div>
- </div>
- </%def>
+ ${draw_graph_div('circus', endpoint=stat_endpoint)}
+ ${draw_graph_div('circusd-stats', endpoint=stat_endpoint)}
 
- ${draw_graph_div('circus')}
- ${draw_graph_div('circusd-stats')}
-
- %if controller.get_client(endpoints[0]).embed_httpd:
- ${draw_graph_div('circushttpd', 'circushttpd')}
+ %if controller.get_client(endpoint).embed_httpd:
+ ${draw_graph_div('circushttpd', 'circushttpd', endpoint=stat_endpoint)}
  %endif
 
- %if controller.get_client(endpoints[0]).use_sockets:
- ${draw_graph_div('socket-stats', 'Socket Activity (<a href="' + reverse_url('sockets') + '">see all the sockets</a>)', socket=True)}
+ %if controller.get_client(endpoint).use_sockets:
+ ${draw_graph_div('socket-stats', 'Socket Activity (<a href="' + reverse_url('sockets', b64encode(endpoint)) + '">see all the sockets for the endpoint</a>)', socket=True, endpoint=stat_endpoint)}
  %endif
 
- %for plugin in controller.get_client(endpoints[0]).plugins:
-     ${draw_graph_div(plugin, plugin.split(':')[1].replace('-', '.'), True)}
+ %for plugin in controller.get_client(endpoint).plugins:
+     ${draw_graph_div(plugin, plugin.split(':')[1].replace('-', '.'), True, endpoint=stat_endpoint)}
  %endfor
 
+    <div style="clear:both"></div>
 </div>
-<div style="clear:both"></div>
 
 <div class="title">
    <div class="watcher_name">Options</div>
@@ -118,7 +119,7 @@
             <i>circushttpd</i>
         </td>
         <td>
-            <span class="label">${goptions.get('endpoint', 'N/A')}</span>
+            <span class="label">${endpoint}</span>
         </td>
     </tr>
     <tr>
@@ -126,7 +127,7 @@
             ZeroMQ endpoint used for pub/sub
         </td>
         <td>
-            <span class="label">${goptions.get('pubsub_endpoint', 'N/A')}</span>
+            <span class="label">${controller.get_client(endpoint).pubsub_endpoint}</span>
         </td>
     </tr>
     <tr>
@@ -134,7 +135,7 @@
             ZeroMQ endpoint used for the pub/sub stats
         </td>
         <td>
-            <span class="label">${goptions.get('stats_endpoint', 'N/A')}</span>
+            <span class="label">${controller.get_client(endpoint).stats_endpoint}</span>
         </td>
     </tr>
 
@@ -143,33 +144,32 @@
             Delay in seconds for the ZMQ polling.
         </td>
         <td>
-            <span class="label">${goptions.get('check_delay', 'N/A')}</span>
+            <span class="label">${controller.get_client(endpoint).check_delay}</span>
         </td>
     </tr>
 
 </table>
 
 </div>
+% endfor
 
 <script type="text/javascript">
 $(document).ready(function () {
     var socket = io.connect('${SERVER}');
-    var watchers = ['circusd-stats', 'circus'];
-
-    %if controller.get_client(endpoints[0]).use_sockets:
-        watchers.push('sockets');
-    %endif
-
-    %if controller.get_client(endpoints[0]).embed_httpd:
-        watchers.push('circushttpd');
-    %endif
-
-
-    %for plugin in controller.get_client(endpoints[0]).plugins:
-        watchers.push('${plugin}');
-    %endfor
-
-    supervise(socket, watchers, undefined, ${dumps(endpoints)}, ${dumps(stats_endpoints)});
+    var watchers = [];
+    % for endpoint, stat_endpoint in endpoints.items():
+        watchers.push(['circusd-stats', ${dumps(b64encode(stat_endpoint))}]);
+        watchers.push(['circus', ${dumps(b64encode(stat_endpoint))}]);
+        %if controller.get_client(endpoint).use_sockets:
+            watchers.push(['sockets', ${dumps(b64encode(stat_endpoint))}]);
+        %endif
+        %if controller.get_client(endpoint).embed_httpd:
+            watchers.push(['circushttpd', ${dumps(b64encode(stat_endpoint))}]);
+        %endif
+        %for plugin in controller.get_client(endpoint).plugins:
+            watchers.push(['${plugin}', ${dumps(b64encode(stat_endpoint))}]);
+        %endfor
+    % endfor
+    supervise(socket, watchers, undefined, ${dumps(list(endpoints.keys()))}, ${dumps(endpoints.values())});
 });
-
 </script>

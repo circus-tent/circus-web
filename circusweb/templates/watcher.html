@@ -1,11 +1,11 @@
 <%inherit file="base.html"/>
 
 % if controller:
-    <div class="title">
-     <div class="watcher_name">Watcher <strong>${name}</strong>
-      <a style="display:inline-block;" class="${controller.get_status(name, endpoints[0])}"
-         title="${controller.get_status(name, endpoints[0])}" href="${reverse_url('switch_status', b64encode(endpoints[0]), name)}?redirect=${reverse_url('watcher', name)}"></a></div>
-      <div class="watcher_description"><strong>${controller.get_option(name, 'numprocesses', endpoints[0])}</strong> <span>processes</span>
+    <div class="title" style="background-color: #D6D6FF;">
+     <div class="watcher_name">${endpoint} Watcher <strong>${name}</strong>
+      <a style="display:inline-block;" class="${controller.get_status(name, endpoint)}"
+         title="${controller.get_status(name, endpoint)}" href="${reverse_url('switch_status', b64encode(endpoint), name)}?redirect=${reverse_url('watcher', b64encode(endpoint), name)}"></a></div>
+      <div class="watcher_description"><strong>${controller.get_option(name, 'numprocesses', endpoint)}</strong> <span>processes</span>
      </div>
     </div>
 
@@ -24,35 +24,35 @@
     %for pid in pids:
     <div class="process">
         <div>
-            <span style="display: inline-block; float: left;" class="label">Process #${pid}</span><span id="${name}-${pid}_last_age" class="age-stat"></span>
+            <span style="display: inline-block; float: left;" class="label">Process #${pid}</span><span id="${name}-${pid}-${b64encode(endpoints[endpoint])}_last_age" class="age-stat"></span>
 
             <span style="display: inline-block; float: right;">
-                <a href="${reverse_url('kill_process', b64encode(endpoints[0]), name, pid)}" title="Kill">
+                <a href="${reverse_url('kill_process', b64encode(endpoint), name, pid)}" title="Kill">
                     <img src="${static_url('kill.png')}" border="0" alt="Kill" />
                 </a>
             </span>
         </div>
 
         <div class="stat">
-             <div id="${name}-${pid}" class="graph"></div>
+             <div id="${name}-${pid}-${b64encode(endpoints[endpoint])}" class="graph"></div>
              <div class="metrics cpu">
                 <span class="metric_label">CPU</span>
-                <span class="metric_value" id="${name}-${pid}_last_cpu">0.0 %</span>
+                <span class="metric_value" id="${name}-${pid}-${b64encode(endpoints[endpoint])}_last_cpu">0.0 %</span>
              </div>
              <div class="metrics mem">
                 <span class="metric_label">Mem</span>
-                <span class="metric_value" id="${name}-${pid}_last_mem">0.0 %</span>
+                <span class="metric_value" id="${name}-${pid}-${b64encode(endpoints[endpoint])}_last_mem">0.0 %</span>
              </div>
         </div>
     </div>
     %endfor
-    %if not controller.get_option(name, 'singleton', endpoints[0]):
+    %if not controller.get_option(name, 'singleton', endpoint):
     <div class="process">
         <div>
             <span class="label">Add process</span>
         </div>
         <div class="stat">
-             <a class="add_process" title="Add process" href="${reverse_url('incr_proc', b64encode(endpoints[0]), name)}?redirect=${reverse_url('watcher', name)}">+</a>
+             <a class="add_process" title="Add process" href="${reverse_url('incr_proc', b64encode(endpoint), name)}?redirect=${reverse_url('watcher', b64encode(endpoint), name)}">+</a>
         </div>
     </div>
     %endif
@@ -64,7 +64,7 @@
     </div>
 
     <%
-       options = dict(controller.get_options(name, endpoints[0]))
+       options = dict(controller.get_options(name, endpoint))
      %>
 
     <table class="options">
@@ -130,9 +130,9 @@
             Number of processes
             </td>
             <td class="value">
-                <a href="${reverse_url('incr_proc', b64encode(endpoints[0]), name)}?redirect=${reverse_url('watcher', name)}"><span class="orangelabel">+</span></a>
+                <a href="${reverse_url('incr_proc', b64encode(endpoint), name)}?redirect=${reverse_url('watcher', b64encode(endpoint), name)}"><span class="orangelabel">+</span></a>
                 <span class="num_process">${options['numprocesses']}</span>
-                <a href="${reverse_url('decr_proc', b64encode(endpoints[0]), name)}?redirect=${reverse_url('watcher', name)}"><span class="orangelabel">-</span></a>
+                <a href="${reverse_url('decr_proc', b64encode(endpoint), name)}?redirect=${reverse_url('watcher', b64encode(endpoint), name)}"><span class="orangelabel">-</span></a>
             </td>
         </tr>
         <tr>
@@ -157,7 +157,7 @@
 <script type="text/javascript">
     $(document).ready(function () {
         var socket = io.connect('${SERVER}');
-        supervise(socket, [], ['${name}'], ${dumps(endpoints)}, ${dumps(stats_endpoints)});
+        supervise(socket, [], [['${name}', ${dumps(b64encode(endpoints[endpoint]))}, ${dumps(b64encode(endpoint))}]], ${dumps([endpoint])}, ${dumps([endpoints[endpoint]])});
     });
 </script>
 

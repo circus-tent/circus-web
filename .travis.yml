@@ -1,13 +1,13 @@
 language: python
-python:
-    - "2.6"
-    - "2.7"
+python: 2.7
 before_install:
     - sudo apt-get install -y libevent-dev python-gevent
+env:
+  - TOX_ENV=flake8
+script:
+    - tox -e $TOX_ENV
 install:
-    - pip install -r test-requirements.txt --use-mirrors
-    - python setup.py develop
-script: unit2 discover -v && flake8 circusweb
+    - pip install tox
 notifications:
     email: tarek@mozilla.com
     irc: "irc.freenode.org#mozilla-circus"
