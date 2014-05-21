@@ -33,11 +33,13 @@ class SocketIOConnection(tornadio2.SocketConnection):
                 sockets = yield gen.Task(controller.get_sockets,
                                          endpoint=endpoint)
                 fds = [s['fd'] for s in sockets]
-                self.emit('socket-stats-fds-{endpoint}'.format(endpoint=encoded_endpoint), fds=fds)
+                self.emit('socket-stats-fds-{endpoint}'.format(
+                    endpoint=encoded_endpoint), fds=fds)
             else:
                 pids = yield gen.Task(controller.get_pids, watcher, endpoint)
                 pids = [int(pid) for pid in pids]
-                channel = 'stats-{watcher}-pids-{endpoint}'.format(watcher=watcher, endpoint=encoded_endpoint)
+                channel = 'stats-{watcher}-pids-{endpoint}'.format(
+                    watcher=watcher, endpoint=encoded_endpoint)
                 self.emit(channel, pids=pids)
 
         self.watchers = watchers
@@ -58,11 +60,13 @@ class SocketIOConnection(tornadio2.SocketConnection):
                 # if we get information about sockets and we explicitely
                 # requested them, send back the information.
                 if 'sockets' in p.watchersWithPids and 'fd' in stat:
-                    p.emit('socket-stats-{fd}-{endpoint}'.format(fd=stat['fd'], endpoint=stat_endpoint_b64),
-                           **stat)
+                    p.emit('socket-stats-{fd}-{endpoint}'.format(
+                        fd=stat['fd'], endpoint=stat_endpoint_b64),
+                        **stat)
                 elif 'sockets' in p.watchers and 'addresses' in stat:
-                    p.emit('socket-stats-{endpoint}'.format(endpoint=stat_endpoint_b64), reads=stat['reads'],
-                           adresses=stat['addresses'])
+                    p.emit('socket-stats-{endpoint}'.format(
+                        endpoint=stat_endpoint_b64), reads=stat['reads'],
+                        adresses=stat['addresses'])
             else:
                 available_watchers = p.watchers + p.watchersWithPids + \
                     ['circus']
@@ -70,20 +74,21 @@ class SocketIOConnection(tornadio2.SocketConnection):
                 if watcher in available_watchers:
                     if (watcher == 'circus'
                             and stat.get('name', None) in available_watchers):
-                        p.emit(
-                            'stats-{watcher}-{endpoint}'.format(watcher=stat['name'], endpoint=stat_endpoint_b64),
+                        p.emit('stats-{watcher}-{endpoint}'.format(
+                            watcher=stat['name'], endpoint=stat_endpoint_b64),
                             mem=stat['mem'], cpu=stat['cpu'], age=stat['age'])
                     else:
                         if pid is None:  # means that it's the aggregation
-                            p.emit(
-                                'stats-{watcher}-{endpoint}'.format(watcher=watcher, endpoint=stat_endpoint_b64),
+                            p.emit('stats-{watcher}-{endpoint}'.format(
+                                watcher=watcher, endpoint=stat_endpoint_b64),
                                 mem=stat['mem'], cpu=stat['cpu'],
                                 age=stat['age'])
                         else:
                             if watcher in p.watchersWithPids:
                                 p.emit(
                                     'stats-{watcher}-{pid}-{endpoint}'.format(
-                                        watcher=watcher, pid=pid, endpoint=stat_endpoint_b64),
+                                    watcher=watcher, pid=pid,
+                                    endpoint=stat_endpoint_b64),
                                     mem=stat['mem'],
                                     cpu=stat['cpu'],
                                     age=stat['age'])

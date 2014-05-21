@@ -16,8 +16,8 @@ try:
     import tornado.web
 
     from tornado import gen
-    from tornado.escape import json_decode, json_encode
-    from tornado.options import define, options
+    from tornado.escape import json_decode, json_encode  # NOQA
+    from tornado.options import define, options  # NOQA
     from tornado.web import URLSpec
 
     import tornadio2
@@ -105,7 +105,6 @@ class BaseHandler(tornado.web.RequestHandler):
         controller = get_controller()
         endpoints = {}
         if self.session.endpoints and controller:
-            stats_endpoints = {}
             for endpoint in self.session.endpoints:
                 client = controller.get_client(endpoint)
                 if client and client.stats_endpoint:
@@ -235,10 +234,10 @@ class WatcherSwitchStatusHandler(BaseHandler):
     @gen.coroutine
     def get(self, endpoint, name):
         url = yield self.run_command(command='switch_status',
-                             message='status switched',
-                             endpoint=b64decode(endpoint),
-                             args=(name,),
-                             redirect_url=self.reverse_url('index'))
+                                     message='status switched',
+                                     endpoint=b64decode(endpoint),
+                                     args=(name,),
+                                     redirect_url=self.reverse_url('index'))
         self.redirect(url)
 
 
@@ -250,12 +249,11 @@ class KillProcessHandler(BaseHandler):
     def get(self, endpoint, name, pid):
         msg = 'process {pid} killed sucessfully'
         url = yield self.run_command(
-                             command='killproc',
-                             message=msg.format(
-                                 pid=pid),
-                             endpoint=b64decode(endpoint),
-                             args=(name, pid),
-                             redirect_url=self.reverse_url('watcher', endpoint, name))
+            command='killproc',
+            message=msg.format(pid=pid),
+            endpoint=b64decode(endpoint),
+            args=(name, pid),
+            redirect_url=self.reverse_url('watcher', endpoint, name))
         self.redirect(url)
 
 
@@ -267,10 +265,12 @@ class DecrProcHandler(BaseHandler):
     def get(self, endpoint, name):
         msg = 'removed one process from the {watcher} pool'
         url = yield self.run_command(command='decrproc',
-                             message=msg.format(watcher=name),
-                             endpoint=b64decode(endpoint),
-                             args=(name,),
-                             redirect_url=self.reverse_url('watcher', endpoint, name))
+                                     message=msg.format(watcher=name),
+                                     endpoint=b64decode(endpoint),
+                                     args=(name,),
+                                     redirect_url=self.reverse_url('watcher',
+                                                                   endpoint,
+                                                                   name))
         self.redirect(url)
 
 
@@ -282,10 +282,12 @@ class IncrProcHandler(BaseHandler):
     def get(self, endpoint, name):
         msg = 'added one process to the {watcher} pool'
         url = yield self.run_command(command='incrproc',
-                             message=msg.format(watcher=name),
-                             endpoint=b64decode(endpoint),
-                             args=(name,),
-                             redirect_url=self.reverse_url('watcher', endpoint, name))
+                                     message=msg.format(watcher=name),
+                                     endpoint=b64decode(endpoint),
+                                     args=(name,),
+                                     redirect_url=self.reverse_url('watcher',
+                                                                   endpoint,
+                                                                   name))
         self.redirect(url)
 
 
@@ -294,7 +296,7 @@ class SocketsHandler(BaseHandler):
     @require_logged_user
     @tornado.web.asynchronous
     @gen.coroutine
-    def get(self, endpoint = None):
+    def get(self, endpoint=None):
         controller = get_controller()
         sockets = {}
 
@@ -308,7 +310,6 @@ class SocketsHandler(BaseHandler):
                 if controller.get_client(endpoint).use_sockets:
                     sockets[endpoint] = yield gen.Task(controller.get_sockets,
                                                        endpoint=endpoint)
-
 
         self.finish(
             self.render_template('sockets.html', sockets=sockets,

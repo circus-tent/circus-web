@@ -142,7 +142,8 @@ class AsynchronousCircusClient(CircusClient):
                 # In case of multi interface binding i.e: tcp://0.0.0.0:5557
                 anyaddr = '0.0.0.0'
                 ip = self.endpoint.lstrip('tcp://').split(':')[0]
-                self.pubsub_endpoint = self.pubsub_endpoint.replace(anyaddr, ip)
+                self.pubsub_endpoint = self.pubsub_endpoint.replace(
+                    anyaddr, ip)
         except CallError:
             self.connected = False
             raise

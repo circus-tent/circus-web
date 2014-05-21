@@ -1,4 +1,3 @@
-from itertools import chain
 from circus.commands import get_commands
 from circusweb.client import AsynchronousCircusClient
 from circusweb.stats_client import AsynchronousStatsConsumer
@@ -112,7 +111,6 @@ class Controller(object):
 
     @gen.coroutine
     def get_pids(self, name, endpoint):
-        tasks = []
         client = self.get_client(endpoint)
         res = yield gen.Task(client.send_message, 'list', name=name)
         raise gen.Return(res['pids'])

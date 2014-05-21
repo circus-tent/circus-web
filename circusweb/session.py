@@ -1,5 +1,3 @@
-from collections import namedtuple
-
 from circusweb.controller import Controller
 from tornado import gen
 

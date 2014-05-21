@@ -46,7 +46,7 @@ def run_command(command, message, endpoint, redirect_url,
 
 class AutoDiscovery(object):
 
-    def __init__(self, multicast_endpoint, loop, rediscover_timeout=30):
+    def __init__(self, multicast_endpoint, loop, rediscover_timeout=10):
         super(AutoDiscovery, self).__init__()
         self.multicast_endpoint = multicast_endpoint
         self.discovered_endpoints = set()
