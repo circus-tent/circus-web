@@ -139,7 +139,7 @@ class Controller(object):
             msg = cmds['stop'].make_message(name=name)
         else:
             msg = cmds['start'].make_message(name=name)
-        res = yield gen.Task(self.client.call, msg)
+        res = yield gen.Task(client.call, msg)
 
         raise gen.Return(res)
 
