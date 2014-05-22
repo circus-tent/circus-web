@@ -58,51 +58,51 @@
 </div>
 
 <div>
-    <%def name='draw_graph_div(watcher, name=None, display_status=False, socket=False, endpoint=None)'>
+    <%def name='draw_graph_div(watcher, name=None, display_status=False, socket=False, endpoint=None, stat_endpoint=None)'>
     <div class="process" style="margin-bottom: 15px">
         <div>
             <span style="display: inline-block; float: left;" class="label">${name or watcher}</span>
-	        <span class="age-stat" id="${watcher}-${b64encode(endpoint)}_last_age"></span>
+	        <span class="age-stat" id="${watcher}-${b64encode(stat_endpoint)}_last_age"></span>
 
             %if display_status:
-            <div style="width: 20px; float: right; margin-right: 10px;"><a class="${controller.get_status(watcher, endpoint)}" title="${controller.get_status(watcher, endpoint)}" href="${reverse_url('switch_status', endpoint, name=watcher)}"></a></div>
+            <div style="width: 20px; float: right; margin-right: 10px;"><a class="${controller.get_status(watcher, endpoint)}" title="${controller.get_status(watcher, endpoint)}" href="${reverse_url('switch_status', b64encode(stat_endpoint), watcher)}"></a></div>
             %endif
         </div>
 
         <div class="stat">
-            <div id="${watcher}-${b64encode(endpoint)}" class="graph"></div>
+            <div id="${watcher}-${b64encode(stat_endpoint)}" class="graph"></div>
             %if socket:
             <div class="metrics" >
                 <span class="metric_label">Reads</span>
-                <span class="metric_value" id="${watcher}-${b64encode(endpoint)}_last_reads">0</span>
+                <span class="metric_value" id="${watcher}-${b64encode(stat_endpoint)}_last_reads">0</span>
             </div>
             %else:
             <div class="metrics cpu">
                 <span class="metric_label">CPU</span>
-                <span class="metric_value" id="${watcher}-${b64encode(endpoint)}_last_cpu">0 %</span>
+                <span class="metric_value" id="${watcher}-${b64encode(stat_endpoint)}_last_cpu">0 %</span>
             </div>
             <div class="metrics mem">
                 <span class="metric_label">Mem</span>
-                <span class="metric_value" id="${watcher}-${b64encode(endpoint)}_last_mem">0 %</span>
+                <span class="metric_value" id="${watcher}-${b64encode(stat_endpoint)}_last_mem">0 %</span>
             </div>
             %endif
         </div>
     </div>
     </%def>
 
- ${draw_graph_div('circus', endpoint=stat_endpoint)}
- ${draw_graph_div('circusd-stats', endpoint=stat_endpoint)}
+ ${draw_graph_div('circus', endpoint=endpoint, stat_endpoint=stat_endpoint)}
+ ${draw_graph_div('circusd-stats', endpoint=endpoint, stat_endpoint=stat_endpoint)}
 
  %if controller.get_client(endpoint).embed_httpd:
- ${draw_graph_div('circushttpd', 'circushttpd', endpoint=stat_endpoint)}
+ ${draw_graph_div('circushttpd', 'circushttpd', endpoint=endpoint, stat_endpoint=stat_endpoint)}
  %endif
 
  %if controller.get_client(endpoint).use_sockets:
- ${draw_graph_div('socket-stats', 'Socket Activity (<a href="' + reverse_url('sockets', b64encode(endpoint)) + '">see all the sockets for the endpoint</a>)', socket=True, endpoint=stat_endpoint)}
+ ${draw_graph_div('socket-stats', 'Socket Activity (<a href="' + reverse_url('sockets', b64encode(endpoint)) + '">see all the sockets for the endpoint</a>)', socket=True, endpoint=endpoint, stat_endpoint=stat_endpoint)}
  %endif
 
  %for plugin in controller.get_client(endpoint).plugins:
-     ${draw_graph_div(plugin, plugin.split(':')[1].replace('-', '.'), True, endpoint=stat_endpoint)}
+     ${draw_graph_div(plugin, plugin.split(':')[1].replace('-', '.'), True, endpoint=endpoint, stat_endpoint=stat_endpoint)}
  %endfor
 
     <div style="clear:both"></div>
