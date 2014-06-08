@@ -571,9 +571,7 @@ td.value {
     box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
 }
 
-.active {
-    background-color: #a0bd71;
-    border: 1px solid #658c31;
+.watcher-status {
     height: 15px;
     -moz-border-radius: 75px;
     -webkit-border-radius: 75px;
@@ -582,15 +580,24 @@ td.value {
     margin-left: 10px;
 }
 
-.stopped {
+.watcher-status-active {
+    background-color: #a0bd71;
+    border: 1px solid #658c31;
+}
+
+.watcher-status-starting {
+    background-color: #8C9DC8;
+    border: 1px solid #455A99;
+}
+
+.watcher-status-stopped {
     background-color: #e0a794;
     border: 1px solid #c77058;
-    height: 15px;
-    -moz-border-radius: 75px;
-    -webkit-border-radius: 75px;
-    width: 15px;
-    display: block;
-    margin-left: 10px;
+}
+
+.watcher-status-stopping {
+    background-color: #E3B57F;
+    border: 1px solid #D48C37;
 }
 
 #login {

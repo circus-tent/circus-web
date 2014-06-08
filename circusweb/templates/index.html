@@ -30,7 +30,7 @@
             <div style="width: 50px;">${options['shell']}</div>
             <div style="width: 50px;">${options['uid']}</div>
             <div style="width: 50px;">${options['gid']}</div>
-            <div style="width: 50px;"><a class="${controller.get_status(watcher, endpoint)}" title="${controller.get_status(watcher, endpoint)}" href="${reverse_url('switch_status', b64encode(endpoint), watcher)}"></a></div>
+            <div style="width: 50px;"><a class="watcher-status watcher-status-${controller.get_status(watcher, endpoint)}" title="${controller.get_status(watcher, endpoint)}" href="${reverse_url('switch_status', b64encode(endpoint), watcher)}"></a></div>
         </div>
         % endif
     % endfor
