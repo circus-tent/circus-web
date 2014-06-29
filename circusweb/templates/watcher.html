@@ -46,7 +46,12 @@
         </div>
     </div>
     %endfor
-    %if not controller.get_option(name, 'singleton', endpoint):
+
+    <%
+       options = dict(controller.get_options(name, endpoint))
+    %>
+
+    %if not options['singleton']:
     <div class="process">
         <div>
             <span class="label">Add process</span>
@@ -62,10 +67,6 @@
     <div class="title">
        <div class="watcher_name">Options</div>
     </div>
-
-    <%
-       options = dict(controller.get_options(name, endpoint))
-     %>
 
     <table class="options">
         <tr>
@@ -127,12 +128,27 @@
 
         <tr>
             <td>
+            Singleton
+            </td>
+            <td class="value">
+                <span>${options['singleton']}</span>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
             Number of processes
             </td>
             <td class="value">
-                <a href="${reverse_url('incr_proc', b64encode(endpoint), name)}?redirect=${reverse_url('watcher', b64encode(endpoint), name)}"><span class="orangelabel">+</span></a>
+                % if not options['singleton'] or options['numprocesses'] != 1:
+                    <a href="${reverse_url('incr_proc', b64encode(endpoint), name)}?redirect=${reverse_url('watcher', b64encode(endpoint), name)}"><span class="orangelabel">+</span></a>
+                % endif
+
                 <span class="num_process">${options['numprocesses']}</span>
-                <a href="${reverse_url('decr_proc', b64encode(endpoint), name)}?redirect=${reverse_url('watcher', b64encode(endpoint), name)}"><span class="orangelabel">-</span></a>
+
+                % if options['numprocesses'] > 0:
+                    <a href="${reverse_url('decr_proc', b64encode(endpoint), name)}?redirect=${reverse_url('watcher', b64encode(endpoint), name)}"><span class="orangelabel">-</span></a>
+                % endif
             </td>
         </tr>
         <tr>
