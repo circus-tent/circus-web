@@ -7,7 +7,7 @@ if not hasattr(sys, 'version_info') or sys.version_info < (2, 6, 0, 'final'):
 
 
 install_requires = ['Mako', 'MarkupSafe', 'anyjson',
-                    'pyzmq', 'circus', 'tornado', 'TornadIO2', 'tomako']
+                    'pyzmq', 'circus', 'tornado', 'sockjs-tornado', 'tomako']
 
 try:
     import argparse     # NOQA
