@@ -402,7 +402,7 @@ def main():
         connect_to_circus(loop, args.endpoint, args.ssh)
 
     app.auto_discovery = AutoDiscovery(args.multicast, loop)
-    http_server = tornado.httpserver.HTTPServer(app)
+    http_server = tornado.httpserver.HTTPServer(app, xheaders=True)
 
     if args.fd:
         sock = socket.fromfd(args.fd, socket.AF_INET, socket.SOCK_STREAM)
