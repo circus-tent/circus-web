@@ -147,9 +147,8 @@ class Controller(object):
     def reloadconfig(self, endpoint):
         client = self.get_client(endpoint)
         res = yield gen.Task(client.send_message, 'reloadconfig')
-        yield gen.Task(client.reloadconfig)
+        yield gen.Task(client.update_watchers)
         raise gen.Return(res)
-        
     
     @gen.coroutine
     def add_watcher(self, name, endpoint, cmd, **kw):
