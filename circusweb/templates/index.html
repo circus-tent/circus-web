@@ -3,6 +3,7 @@
 % for endpoint, stat_endpoint in endpoints.items():
 <div class="title" style="background-color: #D6D6FF;">
     <div style="float: left;" class="watcher_name">${endpoint} Watchers</div>
+    <div style="float: right;"><a href="#" class="add_watcher" data-add-url="${reverse_url('reloadconfig', b64encode(endpoint))}">Reload config</a></div>
     <div style="float: right;"><a href="#" class="add_watcher" data-add-url="${reverse_url('add_watcher', b64encode(endpoint))}">Add Watcher</a></div>
 
     <div class="graph_home">
