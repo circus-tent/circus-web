@@ -18,10 +18,10 @@
       <div>
         %if 'host' in socket:
             <span style="display: inline-block; float: left;"
-              class="label">${socket['host']}:${socket['port']} (fd: ${socket['fd']})</span>
+              class="label">${socket['host']}:${socket['port']} (fd: ${socket['fd']}, name: ${socket['name']})</span>
         %else:
             <span style="display: inline-block; float: left;"
-              class="label">${socket['path']} (fd: ${socket['fd']})</span>
+              class="label">${socket['path']} (fd: ${socket['fd']}, name: ${socket['name']})</span>
 
         %endif
         </div>
