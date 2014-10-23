@@ -317,6 +317,21 @@ class SocketsHandler(BaseHandler):
                                  endpoints=self.session.endpoints))
 
 
+class ReloadconfigHandler(BaseHandler):
+
+    @require_logged_user
+    @tornado.web.asynchronous
+    @gen.coroutine
+    def get(self, endpoint):
+        url = yield self.run_command(command='reloadconfig',
+                                     message='reload the configuration',
+                                     endpoint=b64decode(endpoint),
+                                     args=[],
+                                     redirect_url=self.reverse_url('index'))
+        self.redirect(url)
+
+
+
 class Application(tornado.web.Application):
 
     def __init__(self):
@@ -327,6 +342,8 @@ class Application(tornado.web.Application):
                     ConnectHandler, name="connect"),
             URLSpec(r'/disconnect/',
                     DisconnectHandler, name="disconnect"),
+            URLSpec(r'/([^/]+)/reloadconfig/',
+                    ReloadconfigHandler, name="reloadconfig"),
             URLSpec(r'/([^/]+)/add_watcher/',
                     WatcherAddHandler, name="add_watcher"),
             URLSpec(r'/([^/]+)/watcher/([^/]+)/',
