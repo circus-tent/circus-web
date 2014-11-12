@@ -331,7 +331,6 @@ class ReloadconfigHandler(BaseHandler):
         self.redirect(url)
 
 
-
 class Application(tornado.web.Application):
 
     def __init__(self):
