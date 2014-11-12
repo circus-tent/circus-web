@@ -4,7 +4,7 @@ CHANGES
 0.6 (unreleased)
 ----------------
 
-* No changes yet
+* Allow deactivation of a running worker - #30
 
 
 0.5 (2014-05-21)
