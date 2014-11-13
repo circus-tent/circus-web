@@ -4,5 +4,5 @@ anyjson
 pyzmq
 circus
 tornado
-TornadIO2
+sockjs-tornado
 tomako

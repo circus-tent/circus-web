@@ -1,10 +1,10 @@
-import tornadio2
+import sockjs.tornado
 from tornado import gen
 from collections import defaultdict
 from base64 import b64encode, b64decode
 
 
-class SocketIOConnection(tornadio2.SocketConnection):
+class SocketIOConnection(sockjs.tornado.SockJSConnection):
 
     participants = defaultdict(set)
 
@@ -19,7 +19,15 @@ class SocketIOConnection(tornadio2.SocketConnection):
             self.participants[endpoint].discard(self)
             controller.disconnect_stats_endpoint(endpoint)
 
-    @tornadio2.event
+    def on_event(self, name, *args, **kwargs):
+        if name != "get_stats":
+            return
+
+        if args:
+            return self.get_stats(self, *args)
+        else:
+            return self.get_stats(self, **kwargs)
+
     @gen.coroutine
     def get_stats(self, watchers=[], watchersWithPids=[],
                   endpoints=[], stats_endpoints=[]):

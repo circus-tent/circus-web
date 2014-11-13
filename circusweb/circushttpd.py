@@ -20,7 +20,7 @@ try:
     from tornado.options import define, options  # NOQA
     from tornado.web import URLSpec
 
-    import tornadio2
+    import sockjs.tornado
 
     from mako import exceptions
     from tomako import MakoTemplateLoader
@@ -362,7 +362,7 @@ class Application(tornado.web.Application):
         ]
 
         self.loader = MakoTemplateLoader(TMPLDIR)
-        self.router = tornadio2.TornadioRouter(SocketIOConnection)
+        self.router = sockjs.tornado.SockJSRouter(SocketIOConnection)
         handlers += self.router.urls
 
         settings = {
