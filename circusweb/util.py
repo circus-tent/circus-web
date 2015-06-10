@@ -1,5 +1,6 @@
 import json
 import socket
+import sys
 
 try:
     from urlparse import urlparse
@@ -77,7 +78,12 @@ class AutoDiscovery(object):
         self.sock.setblocking(0)
 
     def rediscover(self):
-        self.sock.sendto('""', (self.multicast_addr, self.multicast_port))
+        major_python_version_number = sys.version_info[0]
+        if major_python_version_number == 3:
+            data = b'""'
+        else:
+            data = '""'
+        self.sock.sendto(data, (self.multicast_addr, self.multicast_port))
 
     def get_message(self, fd_no, type):
         data, address = self.sock.recvfrom(1024)
