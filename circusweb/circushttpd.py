@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import argparse
 import os
 import os.path
@@ -24,7 +26,7 @@ try:
 
     from mako import exceptions
     from tomako import MakoTemplateLoader
-except ImportError, e:
+except ImportError as e:
     reqs = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                         'web-requirements.txt')
     raise ImportError('You need to install dependencies to run the webui. '
@@ -121,7 +123,7 @@ class BaseHandler(tornado.web.RequestHandler):
             template = app.loader.load(template_path)
             return template.generate(**namespace)
         except Exception:
-            print exceptions.text_error_template().render()
+            print(exceptions.text_error_template().render())
 
     def clean_user_session(self):
         """Disconnect the endpoint the user was logged on + Remove cookies."""
@@ -391,7 +393,7 @@ def main():
     parser.add_argument('--version', action='store_true', default=False,
                         help='Displays Circus version and exits.')
     parser.add_argument('--log-level', dest='loglevel', default='info',
-                        choices=LOG_LEVELS.keys() + [key.upper() for key in
+                        choices=list(LOG_LEVELS.keys()) + [key.upper() for key in
                                                      LOG_LEVELS.keys()],
                         help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-',

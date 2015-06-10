@@ -85,7 +85,7 @@ class AsynchronousCircusClient(CircusClient):
 
         try:
             socket.send(cmd)
-        except zmq.ZMQError, e:
+        except zmq.ZMQError as e:
             raise CallError(str(e))
 
         if not callback:

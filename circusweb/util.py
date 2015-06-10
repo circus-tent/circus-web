@@ -1,8 +1,8 @@
 import json
 import socket
+import sys
 
-from urlparse import urlparse
-
+from six.moves.urllib.parse import urlparse
 from tornado import ioloop
 from tornado import gen
 from tornado.ioloop import PeriodicCallback
@@ -35,7 +35,7 @@ def run_command(command, message, endpoint, redirect_url,
 
         if res['status'] != 'ok':
             message = "An error happened: %s" % res['reason']
-    except CallError, e:
+    except CallError as e:
         message = "An error happened: %s" % e
         redirect_url = redirect_on_error
 
@@ -74,7 +74,12 @@ class AutoDiscovery(object):
         self.sock.setblocking(0)
 
     def rediscover(self):
-        self.sock.sendto('""', (self.multicast_addr, self.multicast_port))
+        major_python_version_number = sys.version_info[0]
+        if major_python_version_number == 3:
+            data = b'""'
+        else:
+            data = '""'
+        self.sock.sendto(data, (self.multicast_addr, self.multicast_port))
 
     def get_message(self, fd_no, type):
         data, address = self.sock.recvfrom(1024)
