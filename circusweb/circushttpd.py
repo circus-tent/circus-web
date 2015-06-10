@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import argparse
 import os
 import os.path
@@ -6,8 +8,6 @@ import json
 from base64 import b64encode, b64decode
 from zmq.eventloop import ioloop
 import socket
-
-import six
 
 # Install zmq.eventloop to replace tornado.ioloop
 ioloop.install()
@@ -123,7 +123,7 @@ class BaseHandler(tornado.web.RequestHandler):
             template = app.loader.load(template_path)
             return template.generate(**namespace)
         except Exception:
-            six.print_(exceptions.text_error_template().render())
+            print(exceptions.text_error_template().render())
 
     def clean_user_session(self):
         """Disconnect the endpoint the user was logged on + Remove cookies."""
