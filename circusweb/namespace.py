@@ -87,8 +87,8 @@ class SocketIOConnection(tornadio2.SocketConnection):
                             if watcher in p.watchersWithPids:
                                 p.emit(
                                     'stats-{watcher}-{pid}-{endpoint}'.format(
-                                    watcher=watcher, pid=pid,
-                                    endpoint=stat_endpoint_b64),
+                                        watcher=watcher, pid=pid,
+                                        endpoint=stat_endpoint_b64),
                                     mem=stat['mem'],
                                     cpu=stat['cpu'],
                                     age=stat['age'])

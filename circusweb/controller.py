@@ -29,7 +29,7 @@ class Controller(object):
 
     def disconnect(self, endpoint):
         endpoint = str(endpoint)
-        if not endpoint in self.clients:
+        if endpoint not in self.clients:
             return
         self.clients[endpoint].count -= 1
 
@@ -51,7 +51,7 @@ class Controller(object):
 
     def disconnect_stats_endpoint(self, stats_endpoint):
         stats_endpoint = str(stats_endpoint)
-        if not stats_endpoint in self.stats_clients:
+        if stats_endpoint not in self.stats_clients:
             return
         self.stats_clients[stats_endpoint].count -= 1
 
