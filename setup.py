@@ -6,8 +6,8 @@ if not hasattr(sys, 'version_info') or sys.version_info < (2, 6, 0, 'final'):
     raise SystemExit("Circus requires Python 2.6 or later.")
 
 
-install_requires = ['Mako', 'MarkupSafe', 'anyjson',
-                    'pyzmq', 'circus', 'tornado', 'TornadIO2', 'tomako']
+install_requires = ['Mako', 'MarkupSafe', 'anyjson', 'six',
+                    'pyzmq', 'circus', 'tornado', 'tornadIO2==0.0.3', 'tomako']
 
 try:
     import argparse     # NOQA
@@ -37,6 +37,9 @@ setup(name='circus-web',
           "License :: OSI Approved :: Apache Software License",
           "Development Status :: 3 - Alpha"],
       install_requires=install_requires,
+      dependency_links=[
+          'https://github.com/tomassedovic/tornadio2/archive/python3.zip#egg=tornadIO2-0.0.3',
+      ],
       tests_require=['webtest', 'unittest2'],
       test_suite='circusweb.tests',
       entry_points="""

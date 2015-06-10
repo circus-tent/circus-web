@@ -4,6 +4,6 @@ anyjson
 pyzmq
 circus
 tornado
-git+git://github.com/tomassedovic/tornadio2.git@python3#tornadIO-0.0.3.1
+git+git://github.com/tomassedovic/tornadio2.git@python3#tornadIO2-0.0.3
 tomako
 six
