@@ -1,10 +1,12 @@
 CHANGES
 =======
 
-0.6 (unreleased)
-----------------
+1.0.0 (2015-06-10)
+------------------
 
 * Allow deactivation of a running worker - #30
+* Port to Python3
+* Port to TornadoIO 2
 
 
 0.5 (2014-05-21)
