@@ -1,6 +1,6 @@
 -r pip-requirements.txt
 
-flake8==1.5
-unittest2==0.5.1
-WebTest==1.4.3
+flake8==2.4.1
+unittest2==1.0.1
+WebTest==2.0.18
 mock==1.0.1
