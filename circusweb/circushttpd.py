@@ -24,7 +24,7 @@ try:
 
     from mako import exceptions
     from tomako import MakoTemplateLoader
-except ImportError, e:
+except ImportError as e:
     reqs = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                         'web-requirements.txt')
     raise ImportError('You need to install dependencies to run the webui. '

@@ -35,7 +35,7 @@ def run_command(command, message, endpoint, redirect_url,
 
         if res['status'] != 'ok':
             message = "An error happened: %s" % res['reason']
-    except CallError, e:
+    except CallError as e:
         message = "An error happened: %s" % e
         redirect_url = redirect_on_error
 
