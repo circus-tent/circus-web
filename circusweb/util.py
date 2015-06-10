@@ -1,7 +1,10 @@
 import json
 import socket
 
-from urlparse import urlparse
+try:
+    from urlparse import urlparse
+except ImportError:
+    from urllib.parse import urlparse
 
 from tornado import ioloop
 from tornado import gen
