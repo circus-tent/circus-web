@@ -161,11 +161,11 @@ class ConnectHandler(BaseHandler):
     @gen.coroutine
     def post(self):
         endpoints_list = list(self.session.endpoints)
-        endpoints = self.get_arguments('endpoint_list', [])
+        endpoints = self.get_arguments('endpoint_list', strip=False)
 
         # If no selection in list
         if not endpoints:
-            endpoints = self.get_arguments('endpoint_direct', [])
+            endpoints = self.get_arguments('endpoint_direct', strip=False)
 
         if not endpoints:
             self.redirect(self.reverse_url('disconnect'))
