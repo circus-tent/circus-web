@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import json
 import socket
 import sys
@@ -83,13 +84,12 @@ class AutoDiscovery(object):
 
     def get_message(self, fd_no, type):
         data, address = self.sock.recvfrom(1024)
-        data = json.loads(data)
+        data = json.loads(data.decode('utf-8'))
         endpoint = data.get('endpoint', '')
         if endpoint.startswith('tcp://'):
             # In case of multi interface binding i.e:
             # tcp://0.0.0.0:5557
             endpoint = endpoint.replace('0.0.0.0', address[0])
-
         self.discovered_endpoints.add(endpoint)
 
     def get_endpoints(self):

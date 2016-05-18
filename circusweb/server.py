@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import socket
 
 
@@ -13,7 +14,6 @@ class SocketIOServer(object):
             from socketio.server import SocketIOServer
         except ImportError:
             raise ImportError('You need to install gevent_socketio')
-
         namespace = self.options.get('namespace', 'socket.io')
         policy_server = self.options.get('policy_server', False)
 

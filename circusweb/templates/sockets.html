@@ -38,10 +38,11 @@
     </div>
 % endfor
 
-<script src="${static_url('socket.io.js')}"></script>
+<script type="text/javascript" src="${static_url('sockjs.min.js')}"></script>
 <script type="text/javascript">
     $(document).ready(function () {
-        var socket = io.connect('${SERVER}');
+        var sock = new SockJS('${SERVER}');
+        var socket = epixa.chucktify(sock);
         var watchers = [];
         var stats_endpoints = [];
         % for endpoint in sockets.keys():
