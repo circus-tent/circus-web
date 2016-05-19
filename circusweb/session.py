@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from circusweb.controller import Controller
 from tornado import gen
 
@@ -55,9 +56,9 @@ class SessionManager(object):
     @classmethod
     def new(cls, session_id):
         session = Session()
-        cls.sessions[session_id] = session
+        cls.sessions[session_id.encode('ascii')] = session
         return session
 
     @classmethod
     def delete(cls, session_id):
-        del cls.sessions[session_id]
+        del cls.sessions[session_id.encode('ascii')]

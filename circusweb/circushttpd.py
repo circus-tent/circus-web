@@ -1,14 +1,15 @@
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 import argparse
 import os
 import os.path
 import sys
 import json
-from base64 import b64encode, b64decode
+from base64 import b64encode as _b64encode
+from base64 import b64decode as _b64decode
 from zmq.eventloop import ioloop
 import socket
-
+from six import string_types, iteritems
 # Install zmq.eventloop to replace tornado.ioloop
 ioloop.install()
 
@@ -22,7 +23,7 @@ try:
     from tornado.options import define, options  # NOQA
     from tornado.web import URLSpec
 
-    import tornadio2
+    from sockjs.tornado import SockJSRouter
 
     from mako import exceptions
     from tomako import MakoTemplateLoader
@@ -37,7 +38,7 @@ except ImportError as e:
 from circus.exc import CallError
 from circus.util import configure_logger, LOG_LEVELS
 
-from circusweb.namespace import SocketIOConnection
+from circusweb.namespace import SocketConnection
 from circusweb import __version__, logger
 from circusweb.util import (run_command, AutoDiscovery)
 from circusweb.session import (
@@ -60,18 +61,39 @@ session_opts = {
 }
 
 
-def require_logged_user(func):
+def b64encode(s):
+    return _b64encode(s.encode('ascii'))
 
+
+def b64decode(s):
+    return _b64decode(s).decode('utf-8')
+
+
+def _decode(e):
+    try:
+        e = e.decode('utf-8')
+    except AttributeError:
+        pass
+    return e
+
+
+def jsonify_list(s):
+    try:
+        s = s.decode('utf-8')
+    except AttributeError:
+        if not isinstance(s, string_types):
+            s = [_decode(e) for e in s]
+    return json.dumps(s)
+
+
+def require_logged_user(func):
     @wraps(func)
     def wrapped(self, *args, **kwargs):
         controller = get_controller()
-
         if not self.session.connected or not controller:
             self.clean_user_session()
             return self.redirect(self.application.reverse_url('connect'))
-
         return func(self, *args, **kwargs)
-
     return wrapped
 
 
@@ -99,7 +121,7 @@ class BaseHandler(tornado.web.RequestHandler):
         namespace.update({'controller': get_controller(),
                           'version': __version__,
                           'b64encode': b64encode,
-                          'dumps': json.dumps,
+                          'dumps': jsonify_list,
                           'session': self.session, 'messages': messages,
                           'SERVER': server})
 
@@ -186,7 +208,6 @@ class ConnectHandler(BaseHandler):
         for endpoint in endpoints_list:
             if endpoint not in endpoints:
                 self.session.endpoints.remove(endpoint)
-
         self.redirect(self.reverse_url('index'))
 
 
@@ -207,11 +228,10 @@ class WatcherAddHandler(BaseHandler):
     def post(self, endpoint):
         url = yield self.run_command(
             'add_watcher',
-            kwargs=dict((k, v[0]) for k, v in
-                        self.request.arguments.iteritems()),
+            kwargs=dict((k, v[0]) for k, v in iteritems(self.request.arguments)),
             message='added a new watcher', endpoint=b64decode(endpoint),
-            redirect_url=self.reverse_url('watcher',
-                                          self.get_argument('name').lower()),
+            redirect_url=self.reverse_url(
+                'watcher', self.get_argument('name').lower()),
             redirect_on_error=self.reverse_url('index'))
         self.redirect(url)
 
@@ -364,7 +384,7 @@ class Application(tornado.web.Application):
         ]
 
         self.loader = MakoTemplateLoader(TMPLDIR)
-        self.router = tornadio2.TornadioRouter(SocketIOConnection)
+        self.router = SockJSRouter(SocketConnection)
         handlers += self.router.urls
 
         settings = {

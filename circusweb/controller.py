@@ -1,7 +1,9 @@
+from __future__ import unicode_literals
+
 from circus.commands import get_commands
 from circusweb.client import AsynchronousCircusClient
 from circusweb.stats_client import AsynchronousStatsConsumer
-from circusweb.namespace import SocketIOConnection
+from circusweb.namespace import SocketConnection
 
 from tornado import gen
 
@@ -43,9 +45,8 @@ class Controller(object):
 
         stats_client = AsynchronousStatsConsumer(
             ['stat.'], self.loop,
-            SocketIOConnection.consume_stats, endpoint=stats_endpoint,
+            SocketConnection.consume_stats, endpoint=stats_endpoint,
             ssh_server=self.ssh_server)
-
         stats_client.count += 1
         self.stats_clients[stats_endpoint] = stats_client
 

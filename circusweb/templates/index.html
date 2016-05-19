@@ -156,7 +156,8 @@
 
 <script type="text/javascript">
 $(document).ready(function () {
-    var socket = io.connect('${SERVER}');
+    var sock = new SockJS('${SERVER}');
+    var socket = epixa.chucktify(sock);
     var watchers = [];
     % for endpoint, stat_endpoint in endpoints.items():
         watchers.push(['circusd-stats', ${dumps(b64encode(stat_endpoint))}]);

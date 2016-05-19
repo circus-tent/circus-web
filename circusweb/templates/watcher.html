@@ -169,10 +169,12 @@
         </tr>
     </table>
 
-<script src="${static_url('socket.io.js')}"></script>
+<script type="text/javascript" src="${static_url('sockjs.min.js')}"></script>
 <script type="text/javascript">
     $(document).ready(function () {
-        var socket = io.connect('${SERVER}');
+        var sock = new SockJS('${SERVER}');
+        var socket = epixa.chucktify(sock);
+        console.log(socket);
         supervise(socket, [], [['${name}', ${dumps(b64encode(endpoints[endpoint]))}, ${dumps(b64encode(endpoint))}]], ${dumps([endpoint])}, ${dumps([endpoints[endpoint]])});
     });
 </script>
