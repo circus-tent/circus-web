@@ -144,6 +144,22 @@ class Controller(object):
         raise gen.Return(res)
 
     @gen.coroutine
+    def start_all(self, endpoint):
+        client = self.get_client(endpoint)
+        msg = cmds['start'].make_message(name='*')
+        res = yield gen.Task(client.call, msg)
+
+        raise gen.Return(res)
+
+    @gen.coroutine
+    def stop_all(self, endpoint):
+        client = self.get_client(endpoint)
+        msg = cmds['stop'].make_message(name='*')
+        res = yield gen.Task(client.call, msg)
+
+        raise gen.Return(res)
+
+    @gen.coroutine
     def reloadconfig(self, endpoint):
         client = self.get_client(endpoint)
         res = yield gen.Task(client.send_message, 'reloadconfig')

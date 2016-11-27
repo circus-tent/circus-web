@@ -285,7 +285,7 @@ footer {
     box-shadow: 0 0 5px #757575;
 }
 
-.reloadconfig, .add_watcher, .add_endpoint {
+.reloadconfig, .add_watcher, .add_endpoint, .watchers_start_all, .watchers_stop_all {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
@@ -310,6 +310,10 @@ footer {
     border-radius: 2px;
     display: block;
     text-decoration: none;
+}
+
+.watchers_start_all, .watchers_stop_all {
+    width: auto;
 }
 
 .add_watcher:active {
