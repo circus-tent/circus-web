@@ -6,6 +6,7 @@ import os.path
 import sys
 import json
 from base64 import b64encode, b64decode
+from datetime import datetime
 from zmq.eventloop import ioloop
 import socket
 
@@ -98,6 +99,7 @@ class BaseHandler(tornado.web.RequestHandler):
         server = '%s://%s/' % (self.request.protocol, self.request.host)
         namespace.update({'controller': get_controller(),
                           'version': __version__,
+                          'now': datetime.now,
                           'b64encode': b64encode,
                           'dumps': json.dumps,
                           'session': self.session, 'messages': messages,
@@ -242,7 +244,6 @@ class WatcherSwitchStatusHandler(BaseHandler):
                                      redirect_url=self.reverse_url('index'))
         self.redirect(url)
 
-
 class KillProcessHandler(BaseHandler):
 
     @require_logged_user
@@ -333,6 +334,34 @@ class ReloadconfigHandler(BaseHandler):
         self.redirect(url)
 
 
+class StartAllHandler(BaseHandler):
+
+    @require_logged_user
+    @tornado.web.asynchronous
+    @gen.coroutine
+    def get(self, endpoint):
+        url = yield self.run_command(command='start_all',
+                                     message='starting all watchers',
+                                     endpoint=b64decode(endpoint),
+                                     args=[],
+                                     redirect_url=self.reverse_url('index'))
+        self.redirect(url)
+
+
+class StopAllHandler(BaseHandler):
+
+    @require_logged_user
+    @tornado.web.asynchronous
+    @gen.coroutine
+    def get(self, endpoint):
+        url = yield self.run_command(command='stop_all',
+                                     message='stopping all watchers',
+                                     endpoint=b64decode(endpoint),
+                                     args=[],
+                                     redirect_url=self.reverse_url('index'))
+        self.redirect(url)
+
+
 class Application(tornado.web.Application):
 
     def __init__(self):
@@ -349,6 +378,10 @@ class Application(tornado.web.Application):
                     WatcherAddHandler, name="add_watcher"),
             URLSpec(r'/([^/]+)/watcher/([^/]+)/',
                     WatcherHandler, name="watcher"),
+            URLSpec(r'/([^/]+)/start_all/',
+                    StartAllHandler, name="start_all"),
+            URLSpec(r'/([^/]+)/stop_all/',
+                    StopAllHandler, name="stop_all"),
             URLSpec(r'/([^/]+)/watcher/([^/]+)/switch_status/',
                     WatcherSwitchStatusHandler, name="switch_status"),
             URLSpec(r'/([^/]+)/watcher/([^/]+)/process/kill/([^/]+)/',
