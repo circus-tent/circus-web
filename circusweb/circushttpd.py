@@ -15,7 +15,8 @@ from circus.exc import CallError
 from circus.util import LOG_LEVELS, configure_logger
 from zmq.eventloop import ioloop
 from circusweb.util import AutoDiscovery, run_command
-from circusweb.session import SessionManager, get_controller, connect_to_circus, disconnect_from_circus
+from circusweb.session import (SessionManager, get_controller,
+                               connect_to_circus, disconnect_from_circus)
 from circusweb.namespace import SocketIOConnection
 
 # Install zmq.eventloop to replace tornado.ioloop
