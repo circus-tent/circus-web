@@ -1,13 +1,22 @@
 from __future__ import print_function
 
-import argparse
 import os
-import os.path
 import sys
 import json
-from base64 import b64encode, b64decode
-from zmq.eventloop import ioloop
 import socket
+import os.path
+import argparse
+from uuid import uuid4
+from base64 import b64decode, b64encode
+from functools import wraps
+
+from circusweb import logger, __version__
+from circus.exc import CallError
+from circus.util import LOG_LEVELS, configure_logger
+from zmq.eventloop import ioloop
+from circusweb.util import AutoDiscovery, run_command
+from circusweb.session import SessionManager, get_controller, connect_to_circus, disconnect_from_circus
+from circusweb.namespace import SocketIOConnection
 
 # Install zmq.eventloop to replace tornado.ioloop
 ioloop.install()
@@ -32,19 +41,6 @@ except ImportError as e:
     raise ImportError('You need to install dependencies to run the webui. '
                       'You can do so by using "pip install -r '
                       '%s"\nInitial error: %s' % (reqs, str(e)))
-
-
-from circus.exc import CallError
-from circus.util import configure_logger, LOG_LEVELS
-
-from circusweb.namespace import SocketIOConnection
-from circusweb import __version__, logger
-from circusweb.util import (run_command, AutoDiscovery)
-from circusweb.session import (
-    connect_to_circus, disconnect_from_circus, get_controller, SessionManager)
-
-from uuid import uuid4
-from functools import wraps
 
 
 CURDIR = os.path.dirname(__file__)
