@@ -72,8 +72,8 @@ class SocketIOConnection(tornadio2.SocketConnection):
                     ['circus']
                 # these are not sockets but normal watchers
                 if watcher in available_watchers:
-                    if (watcher == 'circus'
-                            and stat.get('name', None) in available_watchers):
+                    if (watcher == 'circus' and
+                            stat.get('name', None) in available_watchers):
                         p.emit('stats-{watcher}-{endpoint}'.format(
                             watcher=stat['name'], endpoint=stat_endpoint_b64),
                             mem=stat['mem'], cpu=stat['cpu'], age=stat['age'])
