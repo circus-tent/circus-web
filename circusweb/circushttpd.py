@@ -208,6 +208,7 @@ class WatcherAddHandler(BaseHandler):
                         self.request.arguments.iteritems()),
             message='added a new watcher', endpoint=b64decode(endpoint),
             redirect_url=self.reverse_url('watcher',
+                                          endpoint,
                                           self.get_argument('name').lower()),
             redirect_on_error=self.reverse_url('index'))
         self.redirect(url)
