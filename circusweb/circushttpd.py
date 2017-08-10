@@ -13,7 +13,7 @@ from functools import wraps
 from circusweb import logger, __version__
 from circus.exc import CallError
 from circus.util import LOG_LEVELS, configure_logger
-from circus.py3compat import string_types, b
+from circus.py3compat import b
 from zmq.eventloop import ioloop
 from circusweb.util import AutoDiscovery, run_command
 from circusweb.session import (SessionManager, get_controller,
@@ -57,11 +57,14 @@ session_opts = {
     'session.auto': True
 }
 
+
 def encode(s):
     return b64encode(s.encode('utf-8')).decode('utf-8')
 
+
 def decode(s):
     return b64decode(s.encode('utf-8')).decode('utf-8')
+
 
 def require_logged_user(func):
 

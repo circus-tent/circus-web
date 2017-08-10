@@ -61,11 +61,13 @@ class SocketIOConnection(tornadio2.SocketConnection):
                 # requested them, send back the information.
                 if 'sockets' in p.watchersWithPids and 'fd' in stat:
                     p.emit('socket-stats-{fd}-{endpoint}'.format(
-                        fd=stat['fd'], endpoint=stat_endpoint_b64.decode('utf-8')),
+                        fd=stat['fd'],
+                        endpoint=stat_endpoint_b64.decode('utf-8')),
                         **stat)
                 elif 'sockets' in p.watchers and 'addresses' in stat:
                     p.emit('socket-stats-{endpoint}'.format(
-                        endpoint=stat_endpoint_b64.decode('utf-8')), reads=stat['reads'],
+                        endpoint=stat_endpoint_b64.decode('utf-8')),
+                        reads=stat['reads'],
                         adresses=stat['addresses'])
             else:
                 available_watchers = p.watchers + p.watchersWithPids + \
@@ -75,12 +77,14 @@ class SocketIOConnection(tornadio2.SocketConnection):
                     if (watcher == 'circus' and
                             stat.get('name', None) in available_watchers):
                         p.emit('stats-{watcher}-{endpoint}'.format(
-                            watcher=stat['name'], endpoint=stat_endpoint_b64.decode('utf-8')),
+                            watcher=stat['name'],
+                            endpoint=stat_endpoint_b64.decode('utf-8')),
                             mem=stat['mem'], cpu=stat['cpu'], age=stat['age'])
                     else:
                         if pid is None:  # means that it's the aggregation
                             p.emit('stats-{watcher}-{endpoint}'.format(
-                                watcher=watcher, endpoint=stat_endpoint_b64.decode('utf-8')),
+                                watcher=watcher,
+                                endpoint=stat_endpoint_b64.decode('utf-8')),
                                 mem=stat['mem'], cpu=stat['cpu'],
                                 age=stat['age'])
                         else:
@@ -88,7 +92,8 @@ class SocketIOConnection(tornadio2.SocketConnection):
                                 p.emit(
                                     'stats-{watcher}-{pid}-{endpoint}'.format(
                                         watcher=watcher, pid=pid,
-                                        endpoint=stat_endpoint_b64.decode('utf-8')),
+                                        endpoint=stat_endpoint_b64.decode(
+                                            'utf-8')),
                                     mem=stat['mem'],
                                     cpu=stat['cpu'],
                                     age=stat['age'])
