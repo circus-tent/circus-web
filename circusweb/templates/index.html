@@ -171,6 +171,6 @@ $(document).ready(function () {
             watchers.push(['${plugin}', ${dumps(b64encode(stat_endpoint))}]);
         %endfor
     % endfor
-    supervise(socket, watchers, undefined, ${dumps(list(endpoints.keys()))}, ${dumps(endpoints.values())});
+    supervise(socket, watchers, undefined, ${dumps(list(endpoints.keys()))}, ${dumps(list(endpoints.values()))});
 });
 </script>

@@ -17,7 +17,7 @@ class AsynchronousStatsConsumer(object):
         self.pubsub_socket = self.context.socket(zmq.SUB)
         get_connection(self.pubsub_socket, self.endpoint, ssh_server)
         for topic in self.topics:
-            self.pubsub_socket.setsockopt(zmq.SUBSCRIBE, topic)
+            self.pubsub_socket.setsockopt(zmq.SUBSCRIBE, topic.encode('utf-8'))
         self.stream = ZMQStream(self.pubsub_socket, loop)
         self.stream.on_recv(self.process_message)
         self.callback = callback
@@ -36,7 +36,7 @@ class AsynchronousStatsConsumer(object):
     def process_message(self, msg):
         topic, stat = msg
 
-        topic = topic.split('.')
+        topic = topic.decode('utf-8').split('.')
         if len(topic) == 3:
             __, watcher, subtopic = topic
             self.callback(watcher, subtopic, json.loads(stat), self.endpoint)

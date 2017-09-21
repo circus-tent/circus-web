@@ -48,6 +48,6 @@
             watchers.push(['sockets', ${dumps(b64encode(controller.get_client(endpoint).stats_endpoint))}, ${dumps(b64encode(endpoint))}]);
             stats_endpoints.push(${dumps(controller.get_client(endpoint).stats_endpoint)});
         % endfor
-        supervise(socket, [], watchers, ${dumps(sockets.keys())}, stats_endpoints);
+        supervise(socket, [], watchers, ${dumps(list(sockets.keys()))}, stats_endpoints);
     });
 </script>
