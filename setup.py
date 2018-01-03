@@ -1,7 +1,5 @@
 import sys
 from setuptools import setup, find_packages
-from circusweb import __version__
-
 if not hasattr(sys, 'version_info') or sys.version_info < (2, 6, 0, 'final'):
     raise SystemExit("Circus requires Python 2.6 or later.")
 
@@ -22,7 +20,7 @@ with open("CHANGES.rst") as f:
 
 
 setup(name='circus-web',
-      version=__version__,
+      version='1.1.0',
       packages=find_packages(),
       description="Circus Web Dashboard",
       long_description=README,
