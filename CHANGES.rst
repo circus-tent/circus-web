@@ -1,10 +1,12 @@
 CHANGES
 =======
 
-1.1.0 (unreleased)
+1.1.0 (2018-01-03)
 ------------------
 
-* No changes yet.
+* Correct arguments in Tornado - #64
+* Removed protocol suffix to fix circus ssl insecure content warning - #69
+* Fix add watcher - #70
 
 
 1.0.0 (2015-06-10)
